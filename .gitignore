@@ -1,0 +1,13 @@
+# Local AI workspace (not shared)
+ai/
+
+# Local tool/editor files
+claude.md
+.cursorrules
+
+# Dependencies / model artifacts
+node_models/
+
+# Environment files
+.env
+.testEnvVars

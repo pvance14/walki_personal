@@ -1,0 +1,15 @@
+---
+description: Project context and behavior guidelines for Walki
+alwaysApply: true
+---
+
+# Context Source
+- Use [aiDocs/context.md](../../aiDocs/context.md) as the primary project context file.
+- Keep generated plans and implementation aligned with [aiDocs/prd.md](../../aiDocs/prd.md) and [aiDocs/mvp.md](../../aiDocs/mvp.md).
+
+# Behavioral Guidelines
+- Ask for user opinion before starting complex or high-impact work.
+- Prefer pragmatic, MVP-level solutions; avoid over-engineering.
+- If requirements are unclear, flag uncertainty explicitly instead of guessing.
+- State assumptions briefly and confirm when they materially affect implementation.
+- Keep responses concise and action-oriented.
