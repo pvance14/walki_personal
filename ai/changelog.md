@@ -48,6 +48,7 @@ Source plan docs:
 - Updated Phase 6 roadmap checklist to completed and moved the Phase 6 plan/roadmap pair to `ai/complete`.
 - Phase 7 implemented and completed: post-MVP transition assessment, go/no-go framework, and prioritized follow-on planning docs.
 - Updated Phase 7 roadmap checklist to completed and moved the Phase 7 plan/roadmap pair to `ai/complete`.
+- Added a focused dashboard UI refresh roadmap to bring the interactive demo closer to the MVP spec and improve visual hierarchy, spacing rhythm, persona expression, and responsive polish.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
@@ -66,3 +67,4 @@ Source plan docs:
 - `ai/complete/2026-03-09_phase_6_validation_launch_and_learning_loop_roadmap.md`
 - `ai/complete/2026-03-09_phase_7_post_mvp_transition_planning_sub_plan.md`
 - `ai/complete/2026-03-09_phase_7_post_mvp_transition_planning_roadmap.md`
+- `ai/roadmaps/2026-03-10_dashboard_ui_refresh_roadmap.md`
