@@ -15,7 +15,7 @@ For full details, refer to the source specs in `aiDocs/prd.md` and `aiDocs/mvp.m
 - [prd.md](./prd.md)
 - [mvp.md](./mvp.md)
 - [architecture.md](./architecture.md) - This is the technical architecture for the Walki MVP demo and the intended migration path to the production mobile app.
-- [changelog.md](./changelog.md) - This is a list of changes to track as we develop this project.
+- [../ai/changelog.md](../ai/changelog.md) - This is a list of changes to track as we develop this project.
 
 ## Project Snapshot
 
@@ -106,7 +106,7 @@ Before introducing major scope changes:
 
 ## Behavioral Guidelines
 
-- Whenever creating plan does and roadmap docs, always save them in ai/roadmaps. Prefix the name with the date. Add a note that we need to avoid over-engineering, cruft, and legacy-compatibility features in this clean code project.
+- Whenever creating plan docs and roadmap docs, always save them in ai/roadmaps. Prefix the name with the date. Add a note that we need to avoid over-engineering, cruft, and legacy-compatibility features in this clean code project.
 - Whenever finishing with implementing a plan / roadmap doc pair, make sure the roadmap is up to date (tasks checked off, etc). Then move the docs to ai/roadmaps/complete. Then update ai/changelog.md accordingly.
 
 ## Working Expectations in This Repo
@@ -122,4 +122,3 @@ Before introducing major scope changes:
 2. Read `aiDocs/mvp.md` sections related to the current task.
 3. Confirm your output supports at least one primary validation goal.
 4. Implement the smallest high-quality change that improves the demo.
-
