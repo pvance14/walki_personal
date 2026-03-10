@@ -44,6 +44,8 @@ Source plan docs:
 - Updated Phase 4 roadmap checklist to completed and moved the Phase 4 plan/roadmap pair to `ai/complete`.
 - Phase 5 implemented and completed: state persistence/fallback hardening, responsiveness/accessibility improvements, and quality report documentation.
 - Updated Phase 5 roadmap checklist to completed and moved the Phase 5 plan/roadmap pair to `ai/complete`.
+- Phase 6 implemented and completed: deploy configs (Netlify/Vercel/GitHub Pages), validation runbook/findings log, and local static hosting smoke checks.
+- Updated Phase 6 roadmap checklist to completed and moved the Phase 6 plan/roadmap pair to `ai/complete`.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
@@ -58,3 +60,5 @@ Source plan docs:
 - `ai/complete/2026-03-09_phase_4_conversion_and_feedback_layer_roadmap.md`
 - `ai/complete/2026-03-09_phase_5_quality_hardening_for_external_demo_use_sub_plan.md`
 - `ai/complete/2026-03-09_phase_5_quality_hardening_for_external_demo_use_roadmap.md`
+- `ai/complete/2026-03-09_phase_6_validation_launch_and_learning_loop_sub_plan.md`
+- `ai/complete/2026-03-09_phase_6_validation_launch_and_learning_loop_roadmap.md`
