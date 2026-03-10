@@ -22,7 +22,10 @@
       <section id="landing" class="route active" aria-labelledby="landing-title">
         <h1 id="landing-title">Your Walking Buddy Has Six Personalities</h1>
         <p>AI-powered motivation that adapts to what drives you.</p>
-        <button id="start-quiz" class="cta">Take the Motivation Quiz</button>
+        <div class="actions">
+          <button id="start-quiz" class="cta">Take the Motivation Quiz</button>
+          <button id="skip-to-demo" class="secondary">Try the Demo</button>
+        </div>
       </section>
 
       <section id="quiz" class="route" aria-labelledby="quiz-title">
@@ -43,7 +46,34 @@
 
       <section id="waitlist" class="route" aria-labelledby="waitlist-title">
         <h2 id="waitlist-title">Join the Waitlist</h2>
-        <p>Conversion flow scaffold is ready for Phase 4.</p>
+        <p>Your data stays yours. This demo does not sell or share personal data.</p>
+        <form id="waitlist-form" class="card form">
+          <label>
+            Name
+            <input name="name" type="text" required />
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" required />
+          </label>
+          <label>
+            What stood out most?
+            <select name="signal" required>
+              <option value="">Select one</option>
+              <option value="persona_appeal">Persona appeal</option>
+              <option value="quiz_accuracy">Quiz accuracy</option>
+              <option value="concept_clarity">Concept clarity</option>
+              <option value="message_emotion">Message emotion</option>
+              <option value="shareability">Shareability</option>
+            </select>
+          </label>
+          <label>
+            Optional feedback
+            <textarea name="feedback" rows="4"></textarea>
+          </label>
+          <button class="cta" type="submit">Join Waitlist</button>
+          <p id="waitlist-status" class="muted" aria-live="polite"></p>
+        </form>
       </section>
     </main>
 

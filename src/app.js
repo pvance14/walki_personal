@@ -8,6 +8,8 @@ const appRoot = document.getElementById("app");
 const quizShell = document.getElementById("quiz-shell");
 const resultsShell = document.getElementById("results-shell");
 const demoShell = document.getElementById("demo-shell");
+const waitlistForm = document.getElementById("waitlist-form");
+const waitlistStatus = document.getElementById("waitlist-status");
 
 function setRoute(routeId) {
   state.route = routeId;
@@ -131,6 +133,7 @@ function renderResults() {
     </div>
     <div class="actions">
       <button id="retake-quiz" class="secondary">Retake Quiz</button>
+      <button id="share-results" class="secondary">Share Results</button>
       <button id="to-demo" class="cta">See It In Action</button>
     </div>
   `;
@@ -144,6 +147,17 @@ function renderResults() {
 
   resultsShell.querySelector("#to-demo").addEventListener("click", () => {
     setRoute("demo");
+  });
+
+  resultsShell.querySelector("#share-results").addEventListener("click", async () => {
+    const summary = ranked.slice(0, 3).map((p) => `${p.name} ${p.weight}%`).join(", ");
+    const text = `My Walki motivation mix: ${summary}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      window.alert("Results copied to clipboard.");
+    } catch {
+      window.alert(text);
+    }
   });
 }
 
@@ -270,6 +284,17 @@ function renderDemo() {
         <button id="save-persona-mix" class="cta">Save Mix</button>
       </div>
     </article>
+
+    <article class="card wide">
+      <h3>Quick Feedback</h3>
+      <p>How motivating did this demo feel?</p>
+      <div class="actions">
+        <button class="secondary" data-feedback-score="1">Low</button>
+        <button class="secondary" data-feedback-score="2">Medium</button>
+        <button class="secondary" data-feedback-score="3">High</button>
+      </div>
+      <p id="feedback-status" class="muted" aria-live="polite"></p>
+    </article>
   `;
 
   demoShell.querySelector("#log-steps").addEventListener("click", () => {
@@ -316,6 +341,17 @@ function renderDemo() {
     renderResults();
     renderDemo();
   });
+
+  demoShell.querySelectorAll("[data-feedback-score]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const score = button.dataset.feedbackScore;
+      const key = "walki_demo_feedback";
+      const prior = JSON.parse(localStorage.getItem(key) || "[]");
+      prior.push({ score, timestamp: new Date().toISOString() });
+      localStorage.setItem(key, JSON.stringify(prior));
+      demoShell.querySelector("#feedback-status").textContent = "Thanks for the feedback.";
+    });
+  });
 }
 
 navButtons.forEach((button) => {
@@ -324,6 +360,29 @@ navButtons.forEach((button) => {
 
 document.getElementById("start-quiz").addEventListener("click", () => {
   setRoute("quiz");
+});
+document.getElementById("skip-to-demo").addEventListener("click", () => {
+  setRoute("demo");
+});
+
+waitlistForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const formData = new FormData(waitlistForm);
+  const entry = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    signal: formData.get("signal"),
+    feedback: formData.get("feedback"),
+    timestamp: new Date().toISOString(),
+  };
+
+  const key = "walki_waitlist_submissions";
+  const prior = JSON.parse(localStorage.getItem(key) || "[]");
+  prior.push(entry);
+  localStorage.setItem(key, JSON.stringify(prior));
+
+  waitlistStatus.textContent = "You are on the waitlist. Thank you for the feedback.";
+  waitlistForm.reset();
 });
 
 renderQuiz();

@@ -40,6 +40,8 @@ Source plan docs:
 - Updated Phase 2 roadmap checklist to completed and moved the Phase 2 plan/roadmap pair to `ai/complete`.
 - Phase 3 implemented and completed: interactive demo dashboard, weighted motivation generation, calendar/freeze simulation, and persona mix controls.
 - Updated Phase 3 roadmap checklist to completed and moved the Phase 3 plan/roadmap pair to `ai/complete`.
+- Phase 4 implemented and completed: waitlist capture, privacy/trust conversion support, quick feedback prompts, and results sharing action.
+- Updated Phase 4 roadmap checklist to completed and moved the Phase 4 plan/roadmap pair to `ai/complete`.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
@@ -50,3 +52,5 @@ Source plan docs:
 - `ai/complete/2026-03-09_phase_2_core_validation_flow_delivery_roadmap.md`
 - `ai/complete/2026-03-09_phase_3_interactive_demo_systems_sub_plan.md`
 - `ai/complete/2026-03-09_phase_3_interactive_demo_systems_roadmap.md`
+- `ai/complete/2026-03-09_phase_4_conversion_and_feedback_layer_sub_plan.md`
+- `ai/complete/2026-03-09_phase_4_conversion_and_feedback_layer_roadmap.md`
