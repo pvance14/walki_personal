@@ -1,124 +1,86 @@
-# Walki Context
+# Course Agent Context
 
 This file is the default orientation doc for any agent working in this repository.
-Use it to understand what Walki is, what we are validating right now, and how to prioritize decisions.
-For full details, refer to the source specs in `aiDocs/prd.md` and `aiDocs/mvp.md`.
+It now describes the graduate course Phase 1 AI agent assignment, not the earlier Walki static demo work.
 
 ## Source of Truth
 
-- Product strategy and long-term direction: [prd.md](./prd.md)
-- Current build scope and implementation detail: [mvp.md](./mvp.md)
-- If this file conflicts with those docs, follow `mvp.md` for near-term execution and `prd.md` for strategic intent.
+- Near-term implementation scope: [roadmap.md](./roadmap.md)
+- Product requirements: [prd.md](./prd.md)
+- Active execution roadmap: [../ai/roadmaps/2026-03-10_phase_1_repo_realignment_langgraph_agent_roadmap.md](../ai/roadmaps/2026-03-10_phase_1_repo_realignment_langgraph_agent_roadmap.md)
+- Change tracking: [../ai/changelog.md](../ai/changelog.md)
 
-## Other Important Docs
-
-- [prd.md](./prd.md)
-- [mvp.md](./mvp.md)
-- [architecture.md](./architecture.md) - This is the technical architecture for the Walki MVP demo and the intended migration path to the production mobile app.
-- [../ai/changelog.md](../ai/changelog.md) - This is a list of changes to track as we develop this project.
+If docs conflict, follow the active roadmap for execution and `prd.md` for deliverable intent.
 
 ## Project Snapshot
 
-- Product: Walki, a privacy-first walking companion centered on motivational AI personas.
-- Immediate target: web-based interactive MVP demo (responsive, shareable, fast to iterate).
-- Future target: cross-platform mobile app (React Native) after concept validation.
-- Primary audience: women 25-49 who want walking consistency without aggressive fitness culture.
-- Core differentiators:
-  - Persona-driven motivation (not generic reminders)
-  - Emotional variety to reduce notification fatigue
-  - Privacy-first positioning (no selling/sharing user data)
+- Deliverable: a Node.js and TypeScript AI agent project for a graduate-level course
+- Framework stack: LangChain plus LangGraph
+- Primary model: Anthropic Claude Haiku 3.5
+- Fallback model: OpenAI GPT-4o mini
+- Required tools in Phase 1:
+  - Calculator
+  - Web search via Tavily
+- Required UI: functional web chat interface
+- Required engineering artifacts:
+  - `aiDocs/context.md`
+  - brief PRD
+  - phased roadmap
+  - `scripts/test.sh`
+  - structured logging
 
-## Current Objective (What Matters Most Right Now)
+## Phase Split
 
-Validate product-market signal for the persona concept before investing in full native app development.
+### Phase 1
+- Repo and infrastructure setup
+- Calculator tool
+- Web search tool
+- Tool-routing agent
+- Web chat UI
+- Structured logging and test workflow
 
-Primary validation goals:
+### Phase 2
+- RAG tool over a documentation set
+- Conversation memory
+- Final deliverable hardening and extension
 
-- Persona appeal: users find personas motivating and memorable
-- Quiz effectiveness: results feel accurate and personal
-- Concept clarity: value proposition is obvious quickly
-- Emotional response: demo messages feel useful/fun, not robotic
-- Shareability: users want to share results or favorite messages
+## What Matters Most Right Now
 
-Out of scope for the MVP:
+The repo itself is graded, not just whether the chatbot appears to work.
 
-- Real step-tracking accuracy
-- Long-term retention measurement
-- Native mobile UX validation
-- Backend scalability concerns
+Priority order:
 
-## MVP User Journey
+1. Keep docs aligned with the actual assignment.
+2. Build the two required tools with clear schemas and tests.
+3. Build an agent that routes correctly across calculator, web search, or direct response.
+4. Expose the agent through a functional chat UI.
+5. Show disciplined engineering through structured logging, test scripts, and incremental roadmap-driven progress.
 
-Landing page -> motivation quiz -> results/persona showcase -> interactive app demo -> waitlist CTA.
+## Tooling Expectations
 
-Agents should optimize for this end-to-end narrative:
+- Use environment variables for all secrets.
+- Do not commit `.env` files or API keys.
+- Prefer explicit interfaces and typed modules over ad hoc glue code.
+- Web and future RAG tools should use async interfaces.
+- Tool definitions should have:
+  - clear names
+  - useful descriptions
+  - Zod schemas
 
-- Explain the problem quickly
-- Demonstrate personalization clearly
-- Let users feel persona value in under a few minutes
-- End with a strong waitlist/conversion moment
+## Legacy Repo Note
 
-## Persona System (Core Product Mechanic)
+This repo previously contained a Walki static MVP demo. Those files may remain for history, but they are not the source of truth for the graded course deliverable unless the active roadmap explicitly reuses them.
 
-The six personas are the center of the experience:
+## Working Rules
 
-- Companion: supportive friend energy
-- Educator: fact-driven, science-backed motivation
-- Cheerleader: high-energy hype and celebration
-- Challenger: direct, competitive push
-- Sage: calm, mindful guidance
-- Pessimist: dark humor and reverse psychology
+- Keep roadmap checklists current as implementation progresses.
+- Update `ai/changelog.md` whenever roadmap work lands.
+- Avoid over-engineering, cruft, and legacy-compatibility features unless the assignment requires them.
+- Prefer simple, reviewable slices that can be committed incrementally.
 
-Important product behavior:
-
-- Quiz determines weighted persona mix
-- Messaging should feel varied and contextual, not repetitive
-- Persona tone must stay distinct and recognizable
-
-## Product Principles for All Work
-
-- Privacy-first language and product assumptions
-- Motivation over perfection (streak recovery/freeze mindset, not punishment)
-- Low-friction UX over feature complexity
-- Personality and emotional resonance over sterile fitness analytics
-- Fast iteration and stakeholder shareability over production-hardening
-
-## Experience and Brand Direction
-
-- Tone: encouraging, human, and lightly playful; avoid harsh fitness-culture language.
-- Messaging should be clear enough for first-time users in under 30 seconds.
-- The demo should feel modern, intentional, and personality-rich, not generic SaaS.
-- Keep accessibility and readability strong across desktop and mobile layouts.
-
-## Decision Rules for Agents
-
-When making tradeoffs, prioritize in this order:
-
-1. Preserve core validation flow (quiz -> persona result -> demo experience).
-2. Strengthen differentiation (persona clarity + privacy positioning).
-3. Improve speed of iteration and demo reliability.
-4. Avoid adding features that dilute validation learning.
-
-Before introducing major scope changes:
-
-- Check whether the change improves validation of the primary goals.
-- If not, defer to post-MVP backlog unless requested by the user.
-
-## Behavioral Guidelines
-
-- Whenever creating plan docs and roadmap docs, always save them in ai/roadmaps. Prefix the name with the date. Add a note that we need to avoid over-engineering, cruft, and legacy-compatibility features in this clean code project.
-- Whenever finishing with implementing a plan / roadmap doc pair, make sure the roadmap is up to date (tasks checked off, etc). Then move the docs to ai/roadmaps/complete. Then update ai/changelog.md accordingly.
-
-## Working Expectations in This Repo
-
-- Keep docs and implementation aligned; update docs when behavior/scope changes.
-- Prefer explicit assumptions over implicit behavior.
-- Make changes easy for non-engineering stakeholders to review (clear naming, readable structure, obvious flow).
-- When uncertain, default to simpler implementation that still demonstrates the concept well.
-
-## Quick Start for Any Agent
+## Quick Start For Future Agents
 
 1. Read this file.
-2. Read `aiDocs/mvp.md` sections related to the current task.
-3. Confirm your output supports at least one primary validation goal.
-4. Implement the smallest high-quality change that improves the demo.
+2. Read [prd.md](./prd.md) and [roadmap.md](./roadmap.md).
+3. Read the active roadmap in `ai/roadmaps`.
+4. Implement the smallest complete milestone that advances Phase 1.

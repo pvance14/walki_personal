@@ -51,6 +51,12 @@ Source plan docs:
 - Added a focused dashboard UI refresh roadmap to bring the interactive demo closer to the MVP spec and improve visual hierarchy, spacing rhythm, persona expression, and responsive polish.
 - Implemented the dashboard UI refresh in the demo: hero streak module, richer motivation feed, improved calendar/legend/details, persona control polish, in-app step entry modal, and stronger visual hierarchy across the dashboard.
 - Updated the dashboard UI refresh roadmap checklist to implemented.
+- Rebaselined the repo for the Unit 7 course assignment: rewrote `aiDocs/context.md`, replaced `aiDocs/prd.md`, and added `aiDocs/roadmap.md` focused on the Phase 1 agent deliverable.
+- Added a new Node.js and TypeScript project scaffold with `package.json`, `tsconfig.json`, environment-driven config, and Node build/test scripts.
+- Implemented Phase 1 agent modules in `src/agent`, `src/tools`, `src/server`, and `src/shared`, including the calculator tool, Tavily search wrapper, route hints, structured logger, and server entrypoint.
+- Replaced the old static app entrypoint with a course-oriented chat UI in `public/` and the root `index.html`.
+- Added `scripts/test.sh` plus tests for calculator behavior, route hinting, chat request handling, and web search normalization/error paths.
+- Updated the Phase 1 repo realignment roadmap to completed after `npm install` and a passing `scripts/test.sh` run.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
@@ -70,3 +76,4 @@ Source plan docs:
 - `ai/complete/2026-03-09_phase_7_post_mvp_transition_planning_sub_plan.md`
 - `ai/complete/2026-03-09_phase_7_post_mvp_transition_planning_roadmap.md`
 - `ai/roadmaps/2026-03-10_dashboard_ui_refresh_roadmap.md`
+- `ai/roadmaps/2026-03-10_phase_1_repo_realignment_langgraph_agent_roadmap.md`

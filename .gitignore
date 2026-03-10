@@ -7,7 +7,12 @@ claude.md
 
 # Dependencies / model artifacts
 node_models/
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
 
 # Environment files
 .env
+.env.*
 .testEnvVars
