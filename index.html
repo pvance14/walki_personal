@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Walki MVP Demo</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="Primary Header">
+      <div class="brand">Walki</div>
+      <nav aria-label="Primary Navigation">
+        <button class="nav-link" data-route="landing">Landing</button>
+        <button class="nav-link" data-route="quiz">Quiz</button>
+        <button class="nav-link" data-route="results">Results</button>
+        <button class="nav-link" data-route="demo">Demo</button>
+        <button class="nav-link" data-route="waitlist">Waitlist</button>
+      </nav>
+    </header>
+
+    <main id="app" tabindex="-1">
+      <section id="landing" class="route active" aria-labelledby="landing-title">
+        <h1 id="landing-title">Your Walking Buddy Has Six Personalities</h1>
+        <p>AI-powered motivation that adapts to what drives you.</p>
+        <button id="start-quiz" class="cta">Take the Motivation Quiz</button>
+      </section>
+
+      <section id="quiz" class="route" aria-labelledby="quiz-title">
+        <h2 id="quiz-title">Motivation Quiz</h2>
+        <p>10 scenario-based questions. No wrong answers.</p>
+        <div id="quiz-shell" class="card">Quiz flow scaffold is ready for Phase 2.</div>
+      </section>
+
+      <section id="results" class="route" aria-labelledby="results-title">
+        <h2 id="results-title">Your Motivation Profile</h2>
+        <div id="results-shell" class="card">Results and persona showcase scaffold is ready for Phase 2.</div>
+      </section>
+
+      <section id="demo" class="route" aria-labelledby="demo-title">
+        <h2 id="demo-title">Interactive Demo</h2>
+        <div class="demo-grid">
+          <article class="card">Home</article>
+          <article class="card">Calendar</article>
+          <article class="card">Personas</article>
+          <article class="card">Settings</article>
+        </div>
+      </section>
+
+      <section id="waitlist" class="route" aria-labelledby="waitlist-title">
+        <h2 id="waitlist-title">Join the Waitlist</h2>
+        <p>Conversion flow scaffold is ready for Phase 4.</p>
+      </section>
+    </main>
+
+    <footer class="footer">Privacy-first demo. No data selling, no sharing.</footer>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
