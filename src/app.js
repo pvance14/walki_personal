@@ -1,6 +1,8 @@
 import { personas, personaMessages, quizQuestions, initialDemoState } from "./data.js";
 
 const state = { ...initialDemoState };
+const STATE_SCHEMA_VERSION = 1;
+const APP_STATE_KEY = "walki_mvp_state_v1";
 const routes = Array.from(document.querySelectorAll(".route"));
 const navButtons = Array.from(document.querySelectorAll(".nav-link"));
 const appRoot = document.getElementById("app");
@@ -11,6 +13,39 @@ const demoShell = document.getElementById("demo-shell");
 const waitlistForm = document.getElementById("waitlist-form");
 const waitlistStatus = document.getElementById("waitlist-status");
 
+function safeReadJSON(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeWriteJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Ignore storage failures so demo behavior remains usable.
+  }
+}
+
+function hydrateState() {
+  const persisted = safeReadJSON(APP_STATE_KEY);
+  if (!persisted || persisted.schema !== STATE_SCHEMA_VERSION || !persisted.state) return;
+
+  Object.assign(state, persisted.state);
+  state.personaWeights = { ...initialDemoState.personaWeights, ...persisted.state.personaWeights };
+  state.responses = { ...persisted.state.responses };
+  state.mutedPersonas = { ...persisted.state.mutedPersonas };
+  state.calendar = { ...initialDemoState.calendar, ...persisted.state.calendar };
+  state.messageHistory = Array.isArray(persisted.state.messageHistory) ? persisted.state.messageHistory : [...initialDemoState.messageHistory];
+}
+
+function persistState() {
+  safeWriteJSON(APP_STATE_KEY, { schema: STATE_SCHEMA_VERSION, state });
+}
+
 function setRoute(routeId) {
   state.route = routeId;
 
@@ -20,9 +55,15 @@ function setRoute(routeId) {
 
   navButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.route === routeId);
+    if (button.dataset.route === routeId) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
   });
 
   appRoot.focus();
+  persistState();
 }
 
 function initializePersonaScore() {
@@ -86,12 +127,14 @@ function renderQuiz() {
     button.addEventListener("click", () => {
       const chosen = question.answers.find((answer) => answer.id === button.dataset.answerId);
       state.responses[question.id] = chosen;
+      persistState();
       renderQuiz();
     });
   });
 
   quizShell.querySelector("#prev-question").addEventListener("click", () => {
     state.currentQuestion = Math.max(0, state.currentQuestion - 1);
+    persistState();
     renderQuiz();
   });
 
@@ -101,10 +144,12 @@ function renderQuiz() {
       renderResults();
       renderDemo();
       setRoute("results");
+      persistState();
       return;
     }
 
     state.currentQuestion += 1;
+    persistState();
     renderQuiz();
   });
 }
@@ -141,6 +186,7 @@ function renderResults() {
   resultsShell.querySelector("#retake-quiz").addEventListener("click", () => {
     state.currentQuestion = 0;
     state.responses = {};
+    persistState();
     renderQuiz();
     setRoute("quiz");
   });
@@ -197,6 +243,7 @@ function generateMessage() {
 
   state.messageHistory.unshift({ personaId, text, timestamp: "just now" });
   state.messageHistory = state.messageHistory.slice(0, 8);
+  persistState();
 }
 
 function applyFreeze() {
@@ -206,6 +253,7 @@ function applyFreeze() {
   if (state.calendar[previousDay] !== "freeze") {
     state.calendar[previousDay] = "freeze";
     state.freezeAvailable -= 1;
+    persistState();
   }
 }
 
@@ -220,6 +268,7 @@ function normalizeWeights(rawWeights) {
   const delta = 100 - Object.values(normalized).reduce((sum, value) => sum + value, 0);
   normalized[personas[0].id] += delta;
   state.personaWeights = normalized;
+  persistState();
 }
 
 function renderDemo() {
@@ -307,6 +356,7 @@ function renderDemo() {
       } else {
         state.calendar[19] = "partial";
       }
+      persistState();
       renderDemo();
     }
   });
@@ -332,6 +382,7 @@ function renderDemo() {
   demoShell.querySelectorAll("[data-mute-id]").forEach((toggle) => {
     toggle.addEventListener("change", () => {
       state.mutedPersonas[toggle.dataset.muteId] = toggle.checked;
+      persistState();
       renderDemo();
     });
   });
@@ -346,9 +397,9 @@ function renderDemo() {
     button.addEventListener("click", () => {
       const score = button.dataset.feedbackScore;
       const key = "walki_demo_feedback";
-      const prior = JSON.parse(localStorage.getItem(key) || "[]");
+      const prior = safeReadJSON(key) || [];
       prior.push({ score, timestamp: new Date().toISOString() });
-      localStorage.setItem(key, JSON.stringify(prior));
+      safeWriteJSON(key, prior);
       demoShell.querySelector("#feedback-status").textContent = "Thanks for the feedback.";
     });
   });
@@ -377,14 +428,15 @@ waitlistForm.addEventListener("submit", (event) => {
   };
 
   const key = "walki_waitlist_submissions";
-  const prior = JSON.parse(localStorage.getItem(key) || "[]");
+  const prior = safeReadJSON(key) || [];
   prior.push(entry);
-  localStorage.setItem(key, JSON.stringify(prior));
+  safeWriteJSON(key, prior);
 
   waitlistStatus.textContent = "You are on the waitlist. Thank you for the feedback.";
   waitlistForm.reset();
 });
 
+hydrateState();
 renderQuiz();
 renderResults();
 renderDemo();
