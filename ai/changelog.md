@@ -49,6 +49,8 @@ Source plan docs:
 - Phase 7 implemented and completed: post-MVP transition assessment, go/no-go framework, and prioritized follow-on planning docs.
 - Updated Phase 7 roadmap checklist to completed and moved the Phase 7 plan/roadmap pair to `ai/complete`.
 - Added a focused dashboard UI refresh roadmap to bring the interactive demo closer to the MVP spec and improve visual hierarchy, spacing rhythm, persona expression, and responsive polish.
+- Implemented the dashboard UI refresh in the demo: hero streak module, richer motivation feed, improved calendar/legend/details, persona control polish, in-app step entry modal, and stronger visual hierarchy across the dashboard.
+- Updated the dashboard UI refresh roadmap checklist to implemented.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
