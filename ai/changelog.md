@@ -38,6 +38,8 @@ Source plan docs:
 - Updated Phase 1 roadmap checklist to completed and moved the Phase 1 plan/roadmap pair to `ai/complete`.
 - Phase 2 implemented and completed: full quiz flow, persona score calculation, results rendering, and results-to-demo transition.
 - Updated Phase 2 roadmap checklist to completed and moved the Phase 2 plan/roadmap pair to `ai/complete`.
+- Phase 3 implemented and completed: interactive demo dashboard, weighted motivation generation, calendar/freeze simulation, and persona mix controls.
+- Updated Phase 3 roadmap checklist to completed and moved the Phase 3 plan/roadmap pair to `ai/complete`.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
@@ -46,3 +48,5 @@ Source plan docs:
 - `ai/complete/2026-03-09_phase_1_foundations_and_ux_skeleton_roadmap.md`
 - `ai/complete/2026-03-09_phase_2_core_validation_flow_delivery_sub_plan.md`
 - `ai/complete/2026-03-09_phase_2_core_validation_flow_delivery_roadmap.md`
+- `ai/complete/2026-03-09_phase_3_interactive_demo_systems_sub_plan.md`
+- `ai/complete/2026-03-09_phase_3_interactive_demo_systems_roadmap.md`

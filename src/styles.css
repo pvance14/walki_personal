@@ -153,6 +153,10 @@ p {
   gap: 0.9rem;
 }
 
+.wide {
+  grid-column: span 2;
+}
+
 .persona-list {
   display: grid;
   gap: 0.4rem;
@@ -174,6 +178,62 @@ p {
   border-radius: 50%;
 }
 
+.feed {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.calendar-day {
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.35rem;
+  font-size: 0.84rem;
+}
+
+.calendar-day.met {
+  background: #d7f0db;
+}
+
+.calendar-day.partial {
+  background: #fff0c9;
+}
+
+.calendar-day.missed {
+  background: #f9d7d2;
+}
+
+.calendar-day.freeze {
+  background: #d7ebff;
+}
+
+.calendar-day.future {
+  opacity: 0.5;
+}
+
+.persona-controls {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.persona-control {
+  display: grid;
+  gap: 0.3rem;
+}
+
 .footer {
   border-top: 1px solid var(--line);
   padding: 0.9rem 1.25rem;
@@ -184,6 +244,14 @@ p {
 @media (max-width: 640px) {
   .demo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .wide {
+    grid-column: span 1;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   nav {

@@ -7,6 +7,39 @@ export const personas = [
   { id: "pessimist", name: "Pessimist", color: "#6c757d", style: "dark-humor" },
 ];
 
+export const personaMessages = {
+  companion: [
+    "You are {{stepsRemaining}} steps away. Want to finish this together?",
+    "Day {{streak}} already. Proud of you for showing up.",
+    "A short walk can reset your whole mood. I am with you.",
+  ],
+  educator: [
+    "You are {{stepsRemaining}} steps from the target. Consistency compounds.",
+    "Your {{streak}}-day streak supports cardiovascular health.",
+    "A brisk walk can improve focus within minutes.",
+  ],
+  cheerleader: [
+    "Only {{stepsRemaining}} left. You are so close. Let's go.",
+    "{{streak}} days strong. You are unstoppable.",
+    "You are building serious momentum today.",
+  ],
+  challenger: [
+    "{{stepsRemaining}} steps left. Finish what you started.",
+    "{{streak}} days is decent. Push for one more.",
+    "Do not let today be your excuse day.",
+  ],
+  sage: [
+    "{{stepsRemaining}} steps can be your reset ritual today.",
+    "{{streak}} days of practice. Keep the rhythm.",
+    "One walk can quiet a noisy day.",
+  ],
+  pessimist: [
+    "{{stepsRemaining}} left. You will probably skip it. Prove me wrong.",
+    "{{streak}} days. Most people quit by now.",
+    "Another day, another excuse, unless you go now.",
+  ],
+};
+
 export const quizQuestions = [
   {
     id: "q1",
@@ -123,6 +156,16 @@ export const initialDemoState = {
   todaySteps: 6247,
   dailyGoal: 7000,
   streakCurrent: 18,
+  freezeAvailable: 1,
   currentQuestion: 0,
   responses: {},
+  mutedPersonas: {},
+  messageHistory: [
+    { personaId: "cheerleader", text: "You are close. Keep going.", timestamp: "2h ago" },
+    { personaId: "educator", text: "Consistency supports long-term health.", timestamp: "this morning" },
+  ],
+  calendar: {
+    1: "met", 2: "met", 3: "met", 4: "met", 5: "met", 6: "met", 7: "met", 8: "met", 9: "missed", 10: "met",
+    11: "met", 12: "met", 13: "freeze", 14: "met", 15: "met", 16: "met", 17: "met", 18: "met", 19: "partial",
+  },
 };
