@@ -36,9 +36,13 @@ Source plan docs:
 - Updated Phase 0 roadmap checklist to completed and moved the Phase 0 plan/roadmap pair to `ai/complete`.
 - Phase 1 implemented and completed: app shell, route skeleton, responsive baseline, accessibility baseline, and shared persona/quiz seed structures.
 - Updated Phase 1 roadmap checklist to completed and moved the Phase 1 plan/roadmap pair to `ai/complete`.
+- Phase 2 implemented and completed: full quiz flow, persona score calculation, results rendering, and results-to-demo transition.
+- Updated Phase 2 roadmap checklist to completed and moved the Phase 2 plan/roadmap pair to `ai/complete`.
 
 Source plan docs:
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_sub_plan.md`
 - `ai/complete/2026-03-09_phase_0_alignment_and_setup_roadmap.md`
 - `ai/complete/2026-03-09_phase_1_foundations_and_ux_skeleton_sub_plan.md`
 - `ai/complete/2026-03-09_phase_1_foundations_and_ux_skeleton_roadmap.md`
+- `ai/complete/2026-03-09_phase_2_core_validation_flow_delivery_sub_plan.md`
+- `ai/complete/2026-03-09_phase_2_core_validation_flow_delivery_roadmap.md`

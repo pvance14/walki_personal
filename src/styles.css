@@ -100,10 +100,78 @@ p {
   padding: 1rem;
 }
 
+.progress {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.answers {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.8rem 0 1rem;
+}
+
+.answer {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 0.8rem;
+  cursor: pointer;
+}
+
+.answer.selected {
+  border-color: var(--primary);
+  background: #fff3ef;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary:disabled,
+.cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .demo-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.persona-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.persona-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  border-bottom: 1px dashed var(--line);
+  padding: 0.35rem 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
 .footer {
