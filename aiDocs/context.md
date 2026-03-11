@@ -1,27 +1,27 @@
 # Course Agent Context
 
 This file is the default orientation doc for any agent working in this repository.
-It now describes the graduate course Phase 1 AI agent assignment, not the earlier Walki static demo work.
+The repo is still a graduate course Phase 1 AI agent assignment, but the shipped UI now uses Walki as the product wrapper and domain-specific experience.
 
 ## Source of Truth
 
 - Near-term implementation scope: [roadmap.md](./roadmap.md)
 - Product requirements: [prd.md](./prd.md)
-- Active execution roadmap: [../ai/roadmaps/2026-03-10_phase_1_repo_realignment_langgraph_agent_roadmap.md](../ai/roadmaps/2026-03-10_phase_1_repo_realignment_langgraph_agent_roadmap.md)
+- Active execution roadmap: [../ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md](../ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md)
 - Change tracking: [../ai/changelog.md](../ai/changelog.md)
 
 If docs conflict, follow the active roadmap for execution and `prd.md` for deliverable intent.
 
 ## Project Snapshot
 
-- Deliverable: a Node.js and TypeScript AI agent project for a graduate-level course
+- Deliverable: a Node.js and TypeScript AI agent project for a graduate-level course, presented as a Walki single-page walking-coach demo
 - Framework stack: LangChain plus LangGraph
 - Primary model: Anthropic Claude Haiku 3.5
 - Fallback model: OpenAI GPT-4o mini
 - Required tools in Phase 1:
   - Calculator
   - Web search via Tavily
-- Required UI: functional web chat interface
+- Required UI: functional web chat interface embedded in a Walki-branded single-page web experience
 - Required engineering artifacts:
   - `aiDocs/context.md`
   - brief PRD
@@ -53,8 +53,21 @@ Priority order:
 1. Keep docs aligned with the actual assignment.
 2. Build the two required tools with clear schemas and tests.
 3. Build an agent that routes correctly across calculator, web search, or direct response.
-4. Expose the agent through a functional chat UI.
+4. Expose the agent through a functional chat UI that still makes calculator, web search, and direct routing legible.
 5. Show disciplined engineering through structured logging, test scripts, and incremental roadmap-driven progress.
+
+## Current Product Shape
+
+- The shipped webpage is Walki-first, not course-first, in presentation.
+- The real agent is framed as `Walki Coach`.
+- The page combines:
+  - motivation quiz
+  - persona results
+  - local-state walking dashboard demo
+  - real streaming chat agent
+- Walki context may influence response tone, but Phase 1 tool scope remains unchanged:
+  - calculator
+  - web search
 
 ## Tooling Expectations
 
@@ -69,7 +82,7 @@ Priority order:
 
 ## Legacy Repo Note
 
-This repo previously contained a Walki static MVP demo. Those files may remain for history, but they are not the source of truth for the graded course deliverable unless the active roadmap explicitly reuses them.
+This repo previously contained a Walki static MVP demo. That legacy work is now partially reactivated as the UI and product framing for the graded Phase 1 deliverable. The course requirements still govern scope and grading.
 
 ## Working Rules
 

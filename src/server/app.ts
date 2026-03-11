@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { inferRouteHint } from "../agent/routeHint.js";
-import type { ChatRequest, Logger } from "../shared/types.js";
+import type { ChatRequest, Logger, WalkiContext } from "../shared/types.js";
 import type { AgentRunner } from "../agent/createCourseAgent.js";
 
 interface AppDependencies {
@@ -16,6 +16,7 @@ export interface StreamEvent {
   type: "meta" | "chunk" | "done";
   routeHint?: string;
   text?: string;
+  personaId?: string;
 }
 
 const contentTypes = new Map<string, string>([
@@ -62,7 +63,7 @@ async function handleChatRequest(
       connection: "keep-alive",
     });
 
-    for await (const event of streamChatEvents(body.message, dependencies, requestId)) {
+    for await (const event of streamChatEvents(body.message, dependencies, requestId, body.walkiContext)) {
       response.write(`${JSON.stringify(event)}\n`);
     }
     response.end();
@@ -87,15 +88,21 @@ export async function executeChatRequest(
     throw new Error("message is required");
   }
 
+  const walkiContext = sanitizeWalkiContext(body.walkiContext);
   const routeHint = inferRouteHint(message);
-  dependencies.logger.info("http.chat_received", { requestId, routeHint });
-  return dependencies.runner.run(message);
+  dependencies.logger.info("http.chat_received", {
+    requestId,
+    routeHint,
+    personaId: walkiContext?.personaId,
+  });
+  return dependencies.runner.run(message, walkiContext);
 }
 
 export async function* streamChatEvents(
   message: string,
   dependencies: Pick<AppDependencies, "logger" | "runner">,
   requestId = randomUUID(),
+  walkiContext?: WalkiContext,
 ): AsyncGenerator<StreamEvent, void, void> {
   const trimmed = message.trim();
   if (!trimmed) {
@@ -103,12 +110,43 @@ export async function* streamChatEvents(
   }
 
   const routeHint = inferRouteHint(trimmed);
-  dependencies.logger.info("http.chat_stream_received", { requestId, routeHint });
-  yield { type: "meta", routeHint };
-  for await (const chunk of dependencies.runner.stream(trimmed)) {
+  const sanitizedContext = sanitizeWalkiContext(walkiContext);
+  dependencies.logger.info("http.chat_stream_received", {
+    requestId,
+    routeHint,
+    personaId: sanitizedContext?.personaId,
+  });
+  yield { type: "meta", routeHint, personaId: sanitizedContext?.personaId };
+  for await (const chunk of dependencies.runner.stream(trimmed, sanitizedContext)) {
     yield { type: "chunk", text: chunk };
   }
   yield { type: "done" };
+}
+
+function sanitizeWalkiContext(context?: WalkiContext): WalkiContext | undefined {
+  if (!context || typeof context !== "object") {
+    return undefined;
+  }
+
+  const sanitized: WalkiContext = {};
+
+  if (typeof context.personaId === "string" && context.personaId.trim()) {
+    sanitized.personaId = context.personaId.trim();
+  }
+  if (typeof context.personaName === "string" && context.personaName.trim()) {
+    sanitized.personaName = context.personaName.trim();
+  }
+  if (typeof context.todaySteps === "number" && Number.isFinite(context.todaySteps)) {
+    sanitized.todaySteps = context.todaySteps;
+  }
+  if (typeof context.dailyGoal === "number" && Number.isFinite(context.dailyGoal)) {
+    sanitized.dailyGoal = context.dailyGoal;
+  }
+  if (typeof context.streakCurrent === "number" && Number.isFinite(context.streakCurrent)) {
+    sanitized.streakCurrent = context.streakCurrent;
+  }
+
+  return Object.keys(sanitized).length > 0 ? sanitized : undefined;
 }
 
 async function serveStaticFile(

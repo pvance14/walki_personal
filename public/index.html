@@ -3,46 +3,157 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Phase 1 AI Agent</title>
+    <title>Walki Coach</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="hero">
-        <p class="eyebrow">Graduate Course Project</p>
-        <h1>Phase 1 AI Agent</h1>
-        <p class="lede">
-          A LangChain and LangGraph-based chat agent with calculator and web search tools.
-        </p>
+    <header class="topbar">
+      <a class="brand" href="#hero">Walki</a>
+      <nav class="nav">
+        <a href="#quiz">Quiz</a>
+        <a href="#results">Results</a>
+        <a href="#dashboard">Demo</a>
+        <a href="#coach">Coach</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section id="hero" class="hero section">
+        <div class="hero-copy">
+          <p class="eyebrow">Persona-driven walking motivation</p>
+          <h1>Your walking coach should sound like someone you actually listen to.</h1>
+          <p class="lede">
+            Walki matches you with a motivation style, previews the product experience, and lets you test a real AI coach that can calculate walking math, answer current questions, and coach in your preferred tone.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#quiz">Take the Motivation Quiz</a>
+            <a class="button secondary" href="#coach">Try Walki Coach</a>
+          </div>
+          <ul class="hero-points">
+            <li>Six coaching personas</li>
+            <li>Interactive streak demo</li>
+            <li>Real chat agent with calculator and web search</li>
+          </ul>
+        </div>
+        <aside class="hero-panel">
+          <p class="panel-kicker">Top personas in this demo</p>
+          <div id="hero-personas" class="persona-stack"></div>
+        </aside>
       </section>
 
-      <section class="chat-panel" aria-label="Chat interface">
-        <div class="panel-header">
-          <div>
-            <h2>Agent Chat</h2>
-            <p id="status" class="status" aria-live="polite">Ready</p>
+      <section id="quiz" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Step 1</p>
+          <h2>Find the voice that gets you moving.</h2>
+          <p>
+            Ten quick prompts shape your Walki persona mix. The result changes the dashboard emphasis and the chat coach tone.
+          </p>
+        </div>
+        <div class="card quiz-card">
+          <div id="quiz-shell"></div>
+        </div>
+      </section>
+
+      <section id="results" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Step 2</p>
+          <h2>Your motivation profile.</h2>
+          <p>
+            Walki uses a mix instead of a single label. Your top personas shape how the product and coach present encouragement.
+          </p>
+        </div>
+        <div class="results-grid">
+          <div class="card">
+            <div id="results-shell"></div>
           </div>
-          <div class="pill-row">
-            <span class="pill">calculator</span>
-            <span class="pill">web_search</span>
+          <div class="card">
+            <h3>Meet the full team</h3>
+            <div id="persona-gallery" class="persona-gallery"></div>
           </div>
         </div>
+      </section>
 
-        <div id="messages" class="messages" aria-live="polite"></div>
+      <section id="dashboard" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Step 3</p>
+          <h2>Preview the product experience.</h2>
+          <p>
+            This is a local-state MVP demo: enough interactivity to show the concept clearly, without pretending there is live device tracking.
+          </p>
+        </div>
+        <div id="dashboard-shell" class="dashboard-grid"></div>
+      </section>
 
-        <form id="chat-form" class="composer">
-          <label class="sr-only" for="message">Message</label>
-          <textarea
-            id="message"
-            name="message"
-            rows="3"
-            placeholder="Ask a math question or something current."
-            required
-          ></textarea>
-          <div class="composer-actions">
-            <button id="submit-button" type="submit">Send</button>
-          </div>
-        </form>
+      <section id="coach" class="section coach-section">
+        <div class="section-heading">
+          <p class="eyebrow">Step 4</p>
+          <h2>Talk to Walki Coach.</h2>
+          <p>
+            This chat stays true to the Phase 1 course project requirements: a real web UI, a real agent, and visible routing between direct responses, calculator, and web search.
+          </p>
+        </div>
+
+        <div class="coach-layout">
+          <section class="chat-panel" aria-label="Chat interface">
+            <div class="panel-header">
+              <div>
+                <h3>Walki Coach Chat</h3>
+                <p id="status" class="status" aria-live="polite">Ready</p>
+              </div>
+              <div class="pill-row">
+                <span class="pill">calculator</span>
+                <span class="pill">web_search</span>
+                <span id="active-persona-pill" class="pill subtle">persona: Sunny</span>
+              </div>
+            </div>
+
+            <div class="starter-panel">
+              <button class="starter" data-prompt="If I'm at 6,247 of 7,000 steps, about how many minutes of brisk walking do I have left?" type="button">
+                Walking math
+              </button>
+              <button class="starter" data-prompt="What are the current recommendations for daily walking for adults?" type="button">
+                Current guidance
+              </button>
+              <button class="starter" data-prompt="Give me a tough-love message to finish my streak today." type="button">
+                Motivation
+              </button>
+            </div>
+
+            <div id="messages" class="messages" aria-live="polite"></div>
+
+            <form id="chat-form" class="composer">
+              <label class="sr-only" for="message">Message</label>
+              <textarea
+                id="message"
+                name="message"
+                rows="3"
+                placeholder="Ask about steps, streaks, current walking advice, or just ask for a motivational push."
+                required
+              ></textarea>
+              <div class="composer-actions">
+                <button id="submit-button" type="submit" class="button primary">Send</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="proof-panel">
+            <div class="card proof-card">
+              <p class="eyebrow">Phase 1 proof</p>
+              <h3>Why this still satisfies the course project</h3>
+              <ul class="proof-list">
+                <li>Functional web chat interface</li>
+                <li>LangChain/LangGraph-style tool-routed agent</li>
+                <li>`calculator` for precise walking math</li>
+                <li>`web_search` for current external info</li>
+                <li>Structured logging and `scripts/test.sh` remain repo-level validation paths</li>
+              </ul>
+            </div>
+            <div class="card proof-card">
+              <p class="eyebrow">Current demo context</p>
+              <div id="coach-context"></div>
+            </div>
+          </aside>
+        </div>
       </section>
     </main>
 

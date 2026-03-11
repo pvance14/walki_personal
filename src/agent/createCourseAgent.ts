@@ -6,7 +6,7 @@ import { inferRouteHint } from "./routeHint.js";
 import { createCalculatorTool } from "../tools/calculator.js";
 import { createWebSearchTool } from "../tools/webSearch.js";
 import type { AppConfig } from "../shared/config.js";
-import type { ChatResult, Logger, ToolCallRecord } from "../shared/types.js";
+import type { ChatResult, Logger, ToolCallRecord, WalkiContext } from "../shared/types.js";
 
 interface AgentLike {
   invoke(input: { messages: Array<{ role: string; content: string }> }): Promise<unknown>;
@@ -14,8 +14,8 @@ interface AgentLike {
 }
 
 export interface AgentRunner {
-  run(message: string): Promise<ChatResult>;
-  stream(message: string): AsyncGenerator<string, void, void>;
+  run(message: string, context?: WalkiContext): Promise<ChatResult>;
+  stream(message: string, context?: WalkiContext): AsyncGenerator<string, void, void>;
 }
 
 function extractText(value: unknown): string {
@@ -81,6 +81,44 @@ async function createLangChainAgent(config: AppConfig): Promise<AgentLike> {
   }) as AgentLike;
 }
 
+function buildWalkiContextBlock(context?: WalkiContext): string {
+  if (!context) {
+    return "";
+  }
+
+  const lines: string[] = [];
+
+  if (context.personaId || context.personaName) {
+    lines.push(
+      `Preferred persona: ${context.personaName || context.personaId || "unknown"} (${context.personaId || "unspecified"})`,
+    );
+  }
+  if (typeof context.todaySteps === "number") {
+    lines.push(`Today's steps: ${context.todaySteps}`);
+  }
+  if (typeof context.dailyGoal === "number") {
+    lines.push(`Daily goal: ${context.dailyGoal}`);
+  }
+  if (typeof context.streakCurrent === "number") {
+    lines.push(`Current streak: ${context.streakCurrent} days`);
+  }
+
+  if (lines.length === 0) {
+    return "";
+  }
+
+  return `Walki context:\n${lines.join("\n")}`;
+}
+
+function buildUserMessage(message: string, context?: WalkiContext): string {
+  const contextBlock = buildWalkiContextBlock(context);
+  if (!contextBlock) {
+    return message;
+  }
+
+  return `${contextBlock}\n\nUser request: ${message}`;
+}
+
 export function createCourseAgentRunner(config: AppConfig, logger: Logger): AgentRunner {
   let cachedAgent: Promise<AgentLike> | null = null;
 
@@ -105,15 +143,15 @@ export function createCourseAgentRunner(config: AppConfig, logger: Logger): Agen
   };
 
   return {
-    async run(message) {
+    async run(message, context) {
       const routeHint = inferRouteHint(message);
-      logger.info("chat.request_started", { routeHint });
+      logger.info("chat.request_started", { routeHint, personaId: context?.personaId });
       const agent = await getAgent();
       const output = await agent.invoke({
-        messages: [{ role: "user", content: message }],
+        messages: [{ role: "user", content: buildUserMessage(message, context) }],
       });
       const answer = extractText(output);
-      logger.info("chat.request_completed", { routeHint });
+      logger.info("chat.request_completed", { routeHint, personaId: context?.personaId });
       return {
         answer,
         routeHint,
@@ -121,12 +159,12 @@ export function createCourseAgentRunner(config: AppConfig, logger: Logger): Agen
       };
     },
 
-    async *stream(message) {
+    async *stream(message, context) {
       const routeHint = inferRouteHint(message);
-      logger.info("chat.stream_started", { routeHint });
+      logger.info("chat.stream_started", { routeHint, personaId: context?.personaId });
       const agent = await getAgent();
       const stream = await agent.stream({
-        messages: [{ role: "user", content: message }],
+        messages: [{ role: "user", content: buildUserMessage(message, context) }],
       });
 
       for await (const chunk of stream) {
@@ -136,7 +174,7 @@ export function createCourseAgentRunner(config: AppConfig, logger: Logger): Agen
         }
       }
 
-      logger.info("chat.stream_completed", { routeHint });
+      logger.info("chat.stream_completed", { routeHint, personaId: context?.personaId });
     },
   };
 }

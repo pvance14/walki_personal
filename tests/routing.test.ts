@@ -10,6 +10,13 @@ test("inferRouteHint picks web search for current info prompts", () => {
   assert.equal(inferRouteHint("Search the latest NVIDIA stock price"), "web_search");
 });
 
+test("inferRouteHint picks calculator for walking math prompts", () => {
+  assert.equal(
+    inferRouteHint("If I'm at 6247 of 7000 steps, how many minutes of brisk walking are left?"),
+    "calculator",
+  );
+});
+
 test("inferRouteHint falls back to direct for conversational prompts", () => {
   assert.equal(inferRouteHint("Explain how this app works"), "direct");
 });

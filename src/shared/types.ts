@@ -1,8 +1,17 @@
 export type RouteHint = "calculator" | "web_search" | "direct";
 
+export interface WalkiContext {
+  personaId?: string;
+  personaName?: string;
+  todaySteps?: number;
+  dailyGoal?: number;
+  streakCurrent?: number;
+}
+
 export interface ChatRequest {
   message: string;
   stream?: boolean;
+  walkiContext?: WalkiContext;
 }
 
 export interface ToolCallRecord {

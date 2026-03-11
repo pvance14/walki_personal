@@ -47,3 +47,25 @@ test("streamChatEvents emits route metadata and response chunks", async () => {
   assert.equal(events[1]?.type, "chunk");
   assert.equal(events[2]?.type, "done");
 });
+
+test("executeChatRequest accepts optional Walki context", async () => {
+  const result = await executeChatRequest(
+    {
+      message: "Give me a push",
+      stream: false,
+      walkiContext: {
+        personaId: "challenger",
+        personaName: "Rico",
+        todaySteps: 6247,
+        dailyGoal: 7000,
+        streakCurrent: 18,
+      },
+    },
+    {
+      logger: createLogger({ test: "chat-api" }),
+      runner: new MockRunner(),
+    },
+  );
+
+  assert.equal(result.answer, "echo:Give me a push");
+});

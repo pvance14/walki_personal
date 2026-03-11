@@ -77,3 +77,15 @@ Source plan docs:
 - `ai/complete/2026-03-09_phase_7_post_mvp_transition_planning_roadmap.md`
 - `ai/roadmaps/2026-03-10_dashboard_ui_refresh_roadmap.md`
 - `ai/roadmaps/2026-03-10_phase_1_repo_realignment_langgraph_agent_roadmap.md`
+
+## 2026-03-11
+- Added a detailed hybrid implementation roadmap for merging the Walki MVP with the Phase 1 course agent into one shipped webpage.
+- Replaced the minimal course-only frontend in `public/` with a Walki-first single-page experience covering hero, quiz, results, dashboard demo, and the real chat agent.
+- Added `public/walki-data.js` to consolidate shipped browser-side Walki persona, quiz, and demo seed data.
+- Extended the chat request contract with optional Walki context and passed persona/progress context into the agent without changing the required Phase 1 tool set.
+- Reframed the system prompt and routing heuristics so the agent behaves as Walki Coach while preserving calculator, web search, direct-response routing, and streaming chat behavior.
+- Added tests for the optional Walki chat context and walking-math route inference.
+- Verified the implementation with a passing `scripts/test.sh`.
+
+Source plan docs:
+- `ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md`
