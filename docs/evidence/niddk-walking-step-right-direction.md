@@ -1,5 +1,7 @@
 # Walking… A Step in the Right Direction!
 
+Source: National Institute of Diabetes and Digestive and Kidney Diseases
+
 ## Walk for Your Health
 
 Walking is one of the easiest ways for you to be physically active.   

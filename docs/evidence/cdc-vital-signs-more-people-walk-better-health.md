@@ -1,6 +1,8 @@
 # More People Walk to Better Health
 
-> www http://www.cdc.gov/vitalsigns
+Source: CDC Vital Signs  
+Publication date: August 2012  
+URL: http://www.cdc.gov/vitalsigns
 
 More than 145 million adults now include walking as part of a physically active lifestyle.  More than 6 in 10 people walk for transportation or for fun, relaxation, or exercise, or for activities such as walking the dog.  The percentage of people who report walking at least once for 10 minutes or more in the previous week rose from 56% (2005) to 62% (2010).
 
