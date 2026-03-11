@@ -8,8 +8,8 @@ import { createApp } from "./app.js";
 
 const config = loadConfig();
 const logger = createLogger({ service: "course-phase-1-agent" });
-await initializeKnowledgeBase(config, logger);
-const runner = createCourseAgentRunner(config, logger);
+const knowledgeBase = await initializeKnowledgeBase(config, logger);
+const runner = createCourseAgentRunner(config, logger, knowledgeBase);
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(currentDir, "../../public");

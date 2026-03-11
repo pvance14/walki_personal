@@ -4,7 +4,9 @@ import { createAgent } from "langchain";
 import { COURSE_AGENT_SYSTEM_PROMPT } from "./systemPrompt.js";
 import { inferRouteHint } from "./routeHint.js";
 import { createCalculatorTool } from "../tools/calculator.js";
+import { createKnowledgeBaseTool } from "../tools/knowledgeBase.js";
 import { createWebSearchTool } from "../tools/webSearch.js";
+import type { InMemoryKnowledgeBase } from "../rag/inMemoryKnowledgeBase.js";
 import type { AppConfig } from "../shared/config.js";
 import type { ChatResult, Logger, ToolCallRecord, WalkiContext } from "../shared/types.js";
 
@@ -70,9 +72,16 @@ function buildModel(config: AppConfig) {
   });
 }
 
-async function createLangChainAgent(config: AppConfig): Promise<AgentLike> {
+async function createLangChainAgent(
+  config: AppConfig,
+  knowledgeBase: InMemoryKnowledgeBase | null,
+): Promise<AgentLike> {
   const model = buildModel(config);
-  const tools = [createCalculatorTool(), createWebSearchTool(config.tavilyApiKey)];
+  const tools = [
+    createCalculatorTool(),
+    createWebSearchTool(config.tavilyApiKey),
+    createKnowledgeBaseTool(knowledgeBase),
+  ];
 
   return createAgent({
     model,
@@ -119,12 +128,16 @@ function buildUserMessage(message: string, context?: WalkiContext): string {
   return `${contextBlock}\n\nUser request: ${message}`;
 }
 
-export function createCourseAgentRunner(config: AppConfig, logger: Logger): AgentRunner {
+export function createCourseAgentRunner(
+  config: AppConfig,
+  logger: Logger,
+  knowledgeBase: InMemoryKnowledgeBase | null = null,
+): AgentRunner {
   let cachedAgent: Promise<AgentLike> | null = null;
 
   const getAgent = () => {
     if (!cachedAgent) {
-      cachedAgent = createLangChainAgent(config);
+      cachedAgent = createLangChainAgent(config, knowledgeBase);
     }
     return cachedAgent;
   };
