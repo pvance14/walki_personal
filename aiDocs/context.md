@@ -7,7 +7,7 @@ The repo is still a graduate course Phase 1 AI agent assignment, but the shipped
 
 - Near-term implementation scope: [roadmap.md](./roadmap.md)
 - Product requirements: [prd.md](./prd.md)
-- Active execution roadmap: [../ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md](../ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md)
+- Active execution roadmap: [../ai/roadmaps/complete/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md](../ai/roadmaps/complete/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md)
 - Change tracking: [../ai/changelog.md](../ai/changelog.md)
 
 If docs conflict, follow the active roadmap for execution and `prd.md` for deliverable intent.
@@ -90,10 +90,3 @@ This repo previously contained a Walki static MVP demo. That legacy work is now 
 - Update `ai/changelog.md` whenever roadmap work lands.
 - Avoid over-engineering, cruft, and legacy-compatibility features unless the assignment requires them.
 - Prefer simple, reviewable slices that can be committed incrementally.
-
-## Quick Start For Future Agents
-
-1. Read this file.
-2. Read [prd.md](./prd.md) and [roadmap.md](./roadmap.md).
-3. Read the active roadmap in `ai/roadmaps`.
-4. Implement the smallest complete milestone that advances Phase 1.

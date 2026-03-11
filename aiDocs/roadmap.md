@@ -1,5 +1,8 @@
 # Course Project Roadmap
 
+## Active Roadmap
+- Current execution roadmap: [../ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md](../ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md)
+
 ## Phase 1
 - Rebaseline docs and repo structure around the course assignment.
 - Build and test calculator and web search tools.
@@ -12,6 +15,8 @@
 ## Phase 2
 - Add a RAG tool over a documentation set.
 - Add conversation memory.
+- Replace heuristic-only tool reporting with actual executed tool traces.
+- Surface visible citations for retrieved sources in the web UI.
 - Expand evaluation coverage and polish final deliverables.
 
 ## Execution Rule

@@ -86,6 +86,9 @@ Source plan docs:
 - Reframed the system prompt and routing heuristics so the agent behaves as Walki Coach while preserving calculator, web search, direct-response routing, and streaming chat behavior.
 - Added tests for the optional Walki chat context and walking-math route inference.
 - Verified the implementation with a passing `scripts/test.sh`.
+- Drafted the active Phase 2 roadmap focused on local `docs/` ingestion, in-memory RAG, session memory, citations, and actual tool tracing.
+- Implemented Phase 2 Slice 1: added the `docs/` corpus contract, startup knowledge-base loading, a typed in-memory retrieval foundation, and tests for document loading plus no-match retrieval behavior.
 
 Source plan docs:
 - `ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md`
+- `ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md`

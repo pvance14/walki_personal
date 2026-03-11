@@ -7,6 +7,8 @@ const configSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   TAVILY_API_KEY: z.string().optional(),
+  RAG_DOCS_DIR: z.string().default("docs"),
+  OPENAI_EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
 });
 
 export type AppConfig = {
@@ -16,6 +18,8 @@ export type AppConfig = {
   anthropicApiKey?: string;
   openAiApiKey?: string;
   tavilyApiKey?: string;
+  ragDocsDir: string;
+  openAiEmbeddingModel: string;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -27,5 +31,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     anthropicApiKey: parsed.ANTHROPIC_API_KEY,
     openAiApiKey: parsed.OPENAI_API_KEY,
     tavilyApiKey: parsed.TAVILY_API_KEY,
+    ragDocsDir: parsed.RAG_DOCS_DIR,
+    openAiEmbeddingModel: parsed.OPENAI_EMBEDDING_MODEL,
   };
 }
