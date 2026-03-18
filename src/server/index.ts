@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadProjectEnv } from "../shared/loadEnv.js";
 import { loadConfig } from "../shared/config.js";
 import { createLogger } from "../shared/logger.js";
 import { createCourseAgentRunner } from "../agent/createCourseAgent.js";
@@ -7,6 +8,7 @@ import { InMemorySessionMemory } from "../agent/sessionMemory.js";
 import { initializeKnowledgeBase } from "../rag/startup.js";
 import { createApp } from "./app.js";
 
+loadProjectEnv();
 const config = loadConfig();
 const logger = createLogger({ service: "course-phase-1-agent" });
 const knowledgeBase = await initializeKnowledgeBase(config, logger);

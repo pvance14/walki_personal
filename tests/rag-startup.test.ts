@@ -38,7 +38,7 @@ test("initializeKnowledgeBase indexes local docs with local embeddings by defaul
   const config: AppConfig = {
     port: 3000,
     modelProvider: "anthropic",
-    modelName: "claude-3-5-haiku-latest",
+    modelName: "claude-haiku-4-5-20251001",
     embeddingProvider: "local",
     anthropicApiKey: "test-anthropic-key",
     ragDocsDir: docsDir,
@@ -60,7 +60,7 @@ test("initializeKnowledgeBase falls back to local embeddings when openai embeddi
   const config: AppConfig = {
     port: 3000,
     modelProvider: "anthropic",
-    modelName: "claude-3-5-haiku-latest",
+    modelName: "claude-haiku-4-5-20251001",
     embeddingProvider: "openai",
     anthropicApiKey: "test-anthropic-key",
     ragDocsDir: docsDir,

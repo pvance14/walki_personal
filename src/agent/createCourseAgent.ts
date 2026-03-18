@@ -78,7 +78,7 @@ function buildModel(config: AppConfig) {
 
   return new ChatAnthropic({
     apiKey: config.anthropicApiKey,
-    model: config.modelName || "claude-3-5-haiku-latest",
+    model: config.modelName || "claude-haiku-4-5-20251001",
     temperature: 0,
   });
 }

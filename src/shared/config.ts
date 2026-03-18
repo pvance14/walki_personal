@@ -3,7 +3,7 @@ import { z } from "zod";
 const configSchema = z.object({
   PORT: z.coerce.number().default(3000),
   MODEL_PROVIDER: z.enum(["anthropic", "openai"]).default("anthropic"),
-  MODEL_NAME: z.string().default("claude-3-5-haiku-latest"),
+  MODEL_NAME: z.string().default("claude-haiku-4-5-20251001"),
   EMBEDDING_PROVIDER: z.enum(["local", "openai"]).default("local"),
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
