@@ -8,7 +8,7 @@ import { createInMemoryKnowledgeBase } from "../src/rag/inMemoryKnowledgeBase.js
 import { getSupportedKnowledgeFileExtensions, loadKnowledgeDocuments } from "../src/rag/loadDocuments.js";
 
 class KeywordEmbeddings implements EmbeddingsInterface<number[]> {
-  private readonly keywords = ["walki", "streak", "persona", "safety", "dashboard", "motivation"];
+  private readonly keywords = ["walki", "streak", "persona", "safety", "dashboard", "motivation", "heel", "toe", "form", "posture"];
 
   async embedDocuments(documents: string[]) {
     return Promise.all(documents.map(async (document) => this.embedQuery(document)));
@@ -38,6 +38,24 @@ test("loadKnowledgeDocuments recursively loads supported files and infers metada
   );
   assert.equal(documents[0]?.metadata.category, "evidence");
   assert.equal(documents[1]?.metadata.category, "walki");
+});
+
+test("loadKnowledgeDocuments chunks long files into multiple retrievable documents", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "walki-rag-chunks-"));
+  await mkdir(path.join(tempDir, "evidence"), { recursive: true });
+
+  const longSections = Array.from({ length: 8 }, (_, index) =>
+    `Section ${index + 1}\n${"walking form and posture guidance ".repeat(40)}`,
+  ).join("\n\n");
+
+  await writeFile(path.join(tempDir, "evidence", "walking-form.txt"), longSections);
+
+  const documents = await loadKnowledgeDocuments(tempDir);
+
+  assert.ok(documents.length > 1);
+  assert.ok(documents.every((document) => document.metadata.sourceName === "walking-form.txt"));
+  assert.ok(documents.every((document) => document.pageContent.length <= 1200));
+  assert.match(documents[0]?.id ?? "", /walking-form\.txt::chunk-1$/);
 });
 
 test("getSupportedKnowledgeFileExtensions returns the allowed corpus formats", () => {
@@ -76,4 +94,27 @@ test("createInMemoryKnowledgeBase returns relevant matches and empty results for
   assert.equal(matches.length, 1);
   assert.equal(matches[0]?.metadata.sourceName, "coach-boundaries.md");
   assert.equal(noMatches.length, 0);
+});
+
+test("chunked documents make focused sections retrievable from long source files", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "walki-rag-retrieval-"));
+  await mkdir(path.join(tempDir, "evidence"), { recursive: true });
+
+  const longDocument = [
+    "Overview\nWalking supports long-term health and consistency.",
+    "How To Walk\nKeep your toes pointed straight ahead, let your arms swing naturally, and maintain an erect posture.",
+    "Foot Action\nUse a fair heel and toe walk with a long, free stride.",
+    "Clothing\nChoose comfortable shoes and light clothing.",
+  ]
+    .map((section) => `${section}\n${section.repeat(30)}`)
+    .join("\n\n");
+
+  await writeFile(path.join(tempDir, "evidence", "walking-form.txt"), longDocument);
+
+  const documents = await loadKnowledgeDocuments(tempDir);
+  const knowledgeBase = await createInMemoryKnowledgeBase(documents, new KeywordEmbeddings());
+  const matches = await knowledgeBase.search("What do our docs say about heel and toe walking form?", 5, 0);
+
+  assert.ok(matches.some((match) => match.metadata.sourceName === "walking-form.txt"));
+  assert.ok(matches.some((match) => /heel and toe walk/i.test(match.pageContent)));
 });
