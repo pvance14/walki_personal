@@ -4,6 +4,34 @@ import type { Logger } from "../shared/types.js";
 import { createInMemoryKnowledgeBase } from "./inMemoryKnowledgeBase.js";
 import { loadKnowledgeDocuments } from "./loadDocuments.js";
 import type { InMemoryKnowledgeBase } from "./inMemoryKnowledgeBase.js";
+import { LocalEmbeddings } from "./localEmbeddings.js";
+
+function createEmbeddings(config: AppConfig, logger: Logger) {
+  if (config.embeddingProvider === "openai") {
+    if (config.openAiApiKey) {
+      return {
+        embeddings: new OpenAIEmbeddings({
+          apiKey: config.openAiApiKey,
+          model: config.openAiEmbeddingModel,
+        }),
+        provider: "openai" as const,
+        model: config.openAiEmbeddingModel,
+      };
+    }
+
+    logger.info("rag.embedding_fallback", {
+      requestedProvider: "openai",
+      fallbackProvider: "local",
+      reason: "missing_openai_api_key",
+    });
+  }
+
+  return {
+    embeddings: new LocalEmbeddings(),
+    provider: "local" as const,
+    model: "local-hash-embeddings",
+  };
+}
 
 export async function initializeKnowledgeBase(
   config: AppConfig,
@@ -19,25 +47,13 @@ export async function initializeKnowledgeBase(
     return null;
   }
 
-  if (!config.openAiApiKey) {
-    logger.info("rag.startup_skipped", {
-      reason: "missing_openai_api_key",
-      docsDir: config.ragDocsDir,
-      documentCount: documents.length,
-    });
-    return null;
-  }
-
-  const embeddings = new OpenAIEmbeddings({
-    apiKey: config.openAiApiKey,
-    model: config.openAiEmbeddingModel,
-  });
-
+  const { embeddings, provider, model } = createEmbeddings(config, logger);
   const knowledgeBase = await createInMemoryKnowledgeBase(documents, embeddings);
   logger.info("rag.startup_indexed", {
     docsDir: config.ragDocsDir,
     documentCount: knowledgeBase.documentCount,
-    embeddingModel: config.openAiEmbeddingModel,
+    embeddingProvider: provider,
+    embeddingModel: model,
   });
 
   return knowledgeBase;

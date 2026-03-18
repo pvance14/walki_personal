@@ -9,6 +9,7 @@ const mockConfig: AppConfig = {
   port: 3000,
   modelProvider: "anthropic",
   modelName: "fake",
+  embeddingProvider: "local",
   ragDocsDir: "docs",
   openAiEmbeddingModel: "text-embedding-3-small",
 };
