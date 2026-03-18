@@ -1,4 +1,4 @@
-export type RouteHint = "calculator" | "web_search" | "direct";
+export type RouteHint = "calculator" | "web_search" | "knowledge_base" | "multi_tool" | "direct";
 
 export interface WalkiContext {
   personaId?: string;
@@ -11,12 +11,15 @@ export interface WalkiContext {
 export interface ChatRequest {
   message: string;
   stream?: boolean;
+  sessionId?: string;
   walkiContext?: WalkiContext;
 }
 
 export interface ToolCallRecord {
   toolName: string;
   input: Record<string, unknown>;
+  output?: unknown;
+  error?: string;
 }
 
 export interface ChatResult {

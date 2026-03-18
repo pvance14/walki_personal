@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createLogger } from "../src/shared/logger.js";
 import { executeChatRequest, streamChatEvents } from "../src/server/app.js";
-import type { AgentRunner } from "../src/agent/createCourseAgent.js";
+import type { AgentRunner, StreamUpdate } from "../src/agent/createCourseAgent.js";
 
 class MockRunner implements AgentRunner {
   async run(message: string) {
@@ -14,7 +14,12 @@ class MockRunner implements AgentRunner {
   }
 
   async *stream(message: string) {
-    yield `echo:${message}`;
+    yield { type: "chunk", text: `echo:${message}` } satisfies StreamUpdate;
+    yield {
+      type: "meta",
+      routeHint: "direct",
+      toolCalls: [],
+    } satisfies StreamUpdate;
   }
 }
 
@@ -43,9 +48,10 @@ test("streamChatEvents emits route metadata and response chunks", async () => {
   }
 
   assert.equal(events[0]?.type, "meta");
-  assert.equal(events[0]?.routeHint, "calculator");
   assert.equal(events[1]?.type, "chunk");
-  assert.equal(events[2]?.type, "done");
+  assert.equal(events[2]?.type, "meta");
+  assert.equal(events[2]?.routeHint, "direct");
+  assert.equal(events[3]?.type, "done");
 });
 
 test("executeChatRequest accepts optional Walki context", async () => {

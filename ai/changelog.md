@@ -90,6 +90,7 @@ Source plan docs:
 - Implemented Phase 2 Slice 1: added the `docs/` corpus contract, startup knowledge-base loading, a typed in-memory retrieval foundation, and tests for document loading plus no-match retrieval behavior.
 - Normalized the evidence corpus filenames and trimmed noisy front matter from long source texts so future RAG retrieval and visible citations start from cleaner content.
 - Implemented Phase 2 Slice 2: added the real `knowledge_base` tool, wired it into the LangChain agent, grounded tool results with source attribution, and added tests for match, no-result, and unavailable-corpus behavior.
+- Implemented Phase 2 Slice 3: replaced heuristic-only backend tool reporting with actual per-request tool tracing, added multi-tool route summaries, extended streaming metadata to carry executed tool records, and added tracing-focused tests.
 
 Source plan docs:
 - `ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md`

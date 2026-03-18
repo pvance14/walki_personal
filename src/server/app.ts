@@ -2,7 +2,6 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { inferRouteHint } from "../agent/routeHint.js";
 import type { ChatRequest, Logger, WalkiContext } from "../shared/types.js";
 import type { AgentRunner } from "../agent/createCourseAgent.js";
 
@@ -17,6 +16,7 @@ export interface StreamEvent {
   routeHint?: string;
   text?: string;
   personaId?: string;
+  toolCalls?: ChatRequest extends never ? never : import("../shared/types.js").ToolCallRecord[];
 }
 
 const contentTypes = new Map<string, string>([
@@ -89,11 +89,10 @@ export async function executeChatRequest(
   }
 
   const walkiContext = sanitizeWalkiContext(body.walkiContext);
-  const routeHint = inferRouteHint(message);
   dependencies.logger.info("http.chat_received", {
     requestId,
-    routeHint,
     personaId: walkiContext?.personaId,
+    sessionId: sanitizeSessionId(body.sessionId),
   });
   return dependencies.runner.run(message, walkiContext);
 }
@@ -109,18 +108,30 @@ export async function* streamChatEvents(
     throw new Error("message is required");
   }
 
-  const routeHint = inferRouteHint(trimmed);
   const sanitizedContext = sanitizeWalkiContext(walkiContext);
   dependencies.logger.info("http.chat_stream_received", {
     requestId,
-    routeHint,
     personaId: sanitizedContext?.personaId,
   });
-  yield { type: "meta", routeHint, personaId: sanitizedContext?.personaId };
-  for await (const chunk of dependencies.runner.stream(trimmed, sanitizedContext)) {
-    yield { type: "chunk", text: chunk };
+  yield { type: "meta", personaId: sanitizedContext?.personaId };
+  for await (const update of dependencies.runner.stream(trimmed, sanitizedContext)) {
+    if (update.type === "chunk") {
+      yield { type: "chunk", text: update.text };
+      continue;
+    }
+
+    yield {
+      type: "meta",
+      routeHint: update.routeHint,
+      toolCalls: update.toolCalls,
+      personaId: sanitizedContext?.personaId,
+    };
   }
   yield { type: "done" };
+}
+
+function sanitizeSessionId(sessionId?: string) {
+  return typeof sessionId === "string" && sessionId.trim() ? sessionId.trim() : undefined;
 }
 
 function sanitizeWalkiContext(context?: WalkiContext): WalkiContext | undefined {

@@ -6,18 +6,23 @@ import { inferRouteHint } from "./routeHint.js";
 import { createCalculatorTool } from "../tools/calculator.js";
 import { createKnowledgeBaseTool } from "../tools/knowledgeBase.js";
 import { createWebSearchTool } from "../tools/webSearch.js";
+import { beginToolTrace, deriveRouteHintFromToolCalls, getTrackedToolCalls, withToolTrace } from "./toolTrace.js";
 import type { InMemoryKnowledgeBase } from "../rag/inMemoryKnowledgeBase.js";
 import type { AppConfig } from "../shared/config.js";
-import type { ChatResult, Logger, ToolCallRecord, WalkiContext } from "../shared/types.js";
+import type { ChatResult, Logger, RouteHint, ToolCallRecord, WalkiContext } from "../shared/types.js";
 
 interface AgentLike {
   invoke(input: { messages: Array<{ role: string; content: string }> }): Promise<unknown>;
   stream(input: { messages: Array<{ role: string; content: string }> }): Promise<AsyncIterable<unknown>>;
 }
 
+export type StreamUpdate =
+  | { type: "chunk"; text: string }
+  | { type: "meta"; routeHint: RouteHint; toolCalls: ToolCallRecord[] };
+
 export interface AgentRunner {
   run(message: string, context?: WalkiContext): Promise<ChatResult>;
-  stream(message: string, context?: WalkiContext): AsyncGenerator<string, void, void>;
+  stream(message: string, context?: WalkiContext): AsyncGenerator<StreamUpdate, void, void>;
 }
 
 function extractText(value: unknown): string {
@@ -142,40 +147,37 @@ export function createCourseAgentRunner(
     return cachedAgent;
   };
 
-  const toToolCalls = (routeHint: ChatResult["routeHint"]): ToolCallRecord[] => {
-    if (routeHint === "direct") {
-      return [];
-    }
-
-    return [
-      {
-        toolName: routeHint === "calculator" ? "calculator" : "web_search",
-        input: {},
-      },
-    ];
-  };
-
   return {
     async run(message, context) {
-      const routeHint = inferRouteHint(message);
-      logger.info("chat.request_started", { routeHint, personaId: context?.personaId });
+      const estimatedRouteHint = inferRouteHint(message);
+      logger.info("chat.request_started", { routeHint: estimatedRouteHint, personaId: context?.personaId });
       const agent = await getAgent();
-      const output = await agent.invoke({
-        messages: [{ role: "user", content: buildUserMessage(message, context) }],
-      });
+      const { result: output, toolCalls } = await withToolTrace(() =>
+        agent.invoke({
+          messages: [{ role: "user", content: buildUserMessage(message, context) }],
+        }),
+      );
+      const routeHint = deriveRouteHintFromToolCalls(toolCalls);
       const answer = extractText(output);
-      logger.info("chat.request_completed", { routeHint, personaId: context?.personaId });
+      logger.info("chat.request_completed", {
+        routeHint,
+        estimatedRouteHint,
+        personaId: context?.personaId,
+        toolNames: toolCalls.map((toolCall) => toolCall.toolName),
+        toolCallCount: toolCalls.length,
+      });
       return {
         answer,
         routeHint,
-        toolCalls: toToolCalls(routeHint),
+        toolCalls,
       };
     },
 
     async *stream(message, context) {
-      const routeHint = inferRouteHint(message);
-      logger.info("chat.stream_started", { routeHint, personaId: context?.personaId });
+      const estimatedRouteHint = inferRouteHint(message);
+      logger.info("chat.stream_started", { routeHint: estimatedRouteHint, personaId: context?.personaId });
       const agent = await getAgent();
+      const traceContext = beginToolTrace();
       const stream = await agent.stream({
         messages: [{ role: "user", content: buildUserMessage(message, context) }],
       });
@@ -183,11 +185,20 @@ export function createCourseAgentRunner(
       for await (const chunk of stream) {
         const text = extractText(chunk);
         if (text) {
-          yield text;
+          yield { type: "chunk", text };
         }
       }
 
-      logger.info("chat.stream_completed", { routeHint, personaId: context?.personaId });
+      const toolCalls = getTrackedToolCalls(traceContext);
+      const routeHint = deriveRouteHintFromToolCalls(toolCalls);
+      logger.info("chat.stream_completed", {
+        routeHint,
+        estimatedRouteHint,
+        personaId: context?.personaId,
+        toolNames: toolCalls.map((toolCall) => toolCall.toolName),
+        toolCallCount: toolCalls.length,
+      });
+      yield { type: "meta", routeHint, toolCalls };
     },
   };
 }

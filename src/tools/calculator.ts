@@ -1,5 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { traceToolExecution } from "../agent/toolTrace.js";
 
 export const calculatorInputSchema = z.object({
   expression: z.string().min(1, "Expression is required."),
@@ -28,10 +29,12 @@ export function evaluateExpression(expression: string): number {
 export function createCalculatorTool() {
   return tool(
     async ({ expression }) => {
-      const result = evaluateExpression(expression);
-      return JSON.stringify({
-        expression,
-        result,
+      return traceToolExecution("calculator", { expression }, async () => {
+        const result = evaluateExpression(expression);
+        return JSON.stringify({
+          expression,
+          result,
+        });
       });
     },
     {

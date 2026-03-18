@@ -1,6 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { TavilySearch } from "@langchain/tavily";
 import { z } from "zod";
+import { traceToolExecution } from "../agent/toolTrace.js";
 import type { SearchResult } from "../shared/types.js";
 
 export const webSearchInputSchema = z.object({
@@ -50,26 +51,28 @@ export function createWebSearchTool(
 ) {
   return tool(
     async ({ query }) => {
-      const searchClient =
-        client ??
-        (tavilyApiKey
-          ? new TavilySearch({
-              tavilyApiKey,
-              maxResults: 5,
-              topic: "general",
-            })
-          : null);
+      return traceToolExecution("web_search", { query }, async () => {
+        const searchClient =
+          client ??
+          (tavilyApiKey
+            ? new TavilySearch({
+                tavilyApiKey,
+                maxResults: 5,
+                topic: "general",
+              })
+            : null);
 
-      if (!searchClient) {
-        throw new Error("TAVILY_API_KEY is required for web_search.");
-      }
+        if (!searchClient) {
+          throw new Error("TAVILY_API_KEY is required for web_search.");
+        }
 
-      const rawResults = await searchClient.invoke({ query });
-      const results = normalizeSearchResults(rawResults);
+        const rawResults = await searchClient.invoke({ query });
+        const results = normalizeSearchResults(rawResults);
 
-      return JSON.stringify({
-        query,
-        results,
+        return JSON.stringify({
+          query,
+          results,
+        });
       });
     },
     {

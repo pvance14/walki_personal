@@ -1,5 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { traceToolExecution } from "../agent/toolTrace.js";
 import type { InMemoryKnowledgeBase } from "../rag/inMemoryKnowledgeBase.js";
 
 export const knowledgeBaseInputSchema = z.object({
@@ -18,35 +19,37 @@ function summarizeExcerpt(content: string, maxLength = 500) {
 export function createKnowledgeBaseTool(knowledgeBase: InMemoryKnowledgeBase | null) {
   return tool(
     async ({ query }) => {
-      if (!knowledgeBase) {
+      return traceToolExecution("knowledge_base", { query }, async () => {
+        if (!knowledgeBase) {
+          return JSON.stringify({
+            query,
+            status: "unavailable",
+            message: "Knowledge base is not available. Check docs loading and embedding configuration.",
+            results: [],
+          });
+        }
+
+        const results = await knowledgeBase.search(query, 3, 0.2);
+        if (results.length === 0) {
+          return JSON.stringify({
+            query,
+            status: "no_results",
+            message: "No relevant documents found in the local knowledge base.",
+            results: [],
+          });
+        }
+
         return JSON.stringify({
           query,
-          status: "unavailable",
-          message: "Knowledge base is not available. Check docs loading and embedding configuration.",
-          results: [],
+          status: "ok",
+          results: results.map((result) => ({
+            sourceName: result.metadata.sourceName,
+            sourcePath: result.metadata.sourcePath,
+            category: result.metadata.category,
+            score: Number(result.score.toFixed(4)),
+            excerpt: summarizeExcerpt(result.pageContent),
+          })),
         });
-      }
-
-      const results = await knowledgeBase.search(query, 3, 0.2);
-      if (results.length === 0) {
-        return JSON.stringify({
-          query,
-          status: "no_results",
-          message: "No relevant documents found in the local knowledge base.",
-          results: [],
-        });
-      }
-
-      return JSON.stringify({
-        query,
-        status: "ok",
-        results: results.map((result) => ({
-          sourceName: result.metadata.sourceName,
-          sourcePath: result.metadata.sourcePath,
-          category: result.metadata.category,
-          score: Number(result.score.toFixed(4)),
-          excerpt: summarizeExcerpt(result.pageContent),
-        })),
       });
     },
     {
