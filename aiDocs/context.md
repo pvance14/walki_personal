@@ -7,10 +7,10 @@ The repo is a graduate course AI agent project now operating in its Phase 2 exte
 
 - Near-term implementation scope: [roadmap.md](./roadmap.md)
 - Product requirements: [prd.md](./prd.md)
-- Active execution roadmap: [../ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md](../ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md)
+- Latest completed execution roadmap: [../ai/roadmaps/complete/2026-03-11_walki_phase_2_rag_memory_roadmap.md](../ai/roadmaps/complete/2026-03-11_walki_phase_2_rag_memory_roadmap.md)
 - Change tracking: [../ai/changelog.md](../ai/changelog.md)
 
-If docs conflict, follow the active roadmap for execution and `prd.md` for deliverable intent.
+If docs conflict, follow the latest completed roadmap for implementation history and `prd.md` for deliverable intent.
 
 ## Project Snapshot
 

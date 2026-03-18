@@ -1,7 +1,14 @@
 # Course Project Roadmap
 
-## Active Roadmap
-- Current execution roadmap: [../ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md](../ai/roadmaps/2026-03-11_walki_phase_2_rag_memory_roadmap.md)
+## Current Status
+
+- Phase 1 course-agent foundation: completed
+- Phase 2 RAG, memory, tracing, and citation work: completed
+- Current focus: rubric-alignment polish, deliverable clarity, and demo readiness
+
+## Authoritative Completion Roadmap
+
+- Latest completed execution roadmap: [../ai/roadmaps/complete/2026-03-11_walki_phase_2_rag_memory_roadmap.md](../ai/roadmaps/complete/2026-03-11_walki_phase_2_rag_memory_roadmap.md)
 
 ## Phase 1
 - Rebaseline docs and repo structure around the course assignment.
@@ -19,5 +26,12 @@
 - Surface visible citations for retrieved sources in the web UI.
 - Expand evaluation coverage and polish final deliverables.
 
+## Remaining Polish Work
+
+- Keep repo-facing docs aligned with the shipped implementation state.
+- Make rubric evidence explicit so reviewers can verify requirements quickly.
+- Keep demo-prep notes current for the required screen-recording submission.
+- Preserve clean validation through `scripts/test.sh`.
+
 ## Execution Rule
-- Use the active roadmap in `ai/roadmaps` for milestone-level status and checklist tracking.
+- Use the completed roadmap in `ai/roadmaps/complete` for milestone-level implementation history, and use this document for the current high-level status summary.

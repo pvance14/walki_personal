@@ -165,6 +165,15 @@ function summarizeRetrievedSources(toolCalls: ToolCallRecord[]) {
   return [...sourceNames];
 }
 
+function sanitizeToolCallsForLogging(toolCalls: ToolCallRecord[]) {
+  return toolCalls.map((toolCall) => ({
+    toolName: toolCall.toolName,
+    input: toolCall.input,
+    output: toolCall.output,
+    error: toolCall.error,
+  }));
+}
+
 export function createCourseAgentRunner(
   config: AppConfig,
   logger: Logger,
@@ -207,6 +216,7 @@ export function createCourseAgentRunner(
         sessionId,
         toolNames: toolCalls.map((toolCall) => toolCall.toolName),
         toolCallCount: toolCalls.length,
+        toolCalls: sanitizeToolCallsForLogging(toolCalls),
         retrievedSources: summarizeRetrievedSources(toolCalls),
       });
       return {
@@ -249,6 +259,7 @@ export function createCourseAgentRunner(
         sessionId,
         toolNames: toolCalls.map((toolCall) => toolCall.toolName),
         toolCallCount: toolCalls.length,
+        toolCalls: sanitizeToolCallsForLogging(toolCalls),
         retrievedSources: summarizeRetrievedSources(toolCalls),
       });
       yield { type: "meta", routeHint, toolCalls };

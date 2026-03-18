@@ -1,72 +1,70 @@
 # Product Requirements Document
-## Walki Coach Phase 1 Agent
+## Walki Course Agent
 
-**Date:** March 10, 2026  
-**Status:** Active
+**Date:** March 18, 2026  
+**Status:** Active shipped state with rubric-hardening polish
 
 ## Summary
 
-Build a web-based AI chat agent using Node.js, TypeScript, LangChain, and LangGraph, then present it as a Walki-branded single-page walking coach demo. The agent must intelligently route user questions to the correct tool, starting with calculator and web search, while the page also demonstrates the Walki MVP concepts of persona matching, motivational tone, and a shareable product story. The repository must still demonstrate proper software engineering practices because the codebase, workflow, and documentation are part of the grade.
+Build a multi-tool chatbot agent for the graduate course assignment using Node.js, TypeScript, LangChain, and LangGraph-oriented patterns, then present it inside a Walki-branded single-page walking coach experience. The shipped repo must make the assignment easy to grade by clearly showing the required tools, ReAct-style tool use, conversation memory, grounded RAG citations, structured logging, and disciplined project documentation.
 
 ## Problem
 
-The assignment is not to produce a quick proof of concept. The project must show that the agent is designed, documented, tested, and built incrementally like real software. The current product framing challenge is to combine the course requirements with the earlier Walki MVP in one coherent webpage instead of leaving them as competing repo identities.
+The project is graded as a software repo, not just as a chatbot demo. That means the implementation has to work, but the repo also needs to explain itself well enough that an instructor can quickly verify the rubric: three tools, multi-turn memory, a web UI, source attribution for RAG answers, structured logs, and evidence of incremental engineering work.
 
 ## Users
 
-- Primary user: course reviewer or instructor testing the repo, UI, and tool-routed chat experience
-- Secondary user: a stakeholder or peer reviewing the Walki concept through the single-page demo
-- Tertiary user: the student maintaining and extending the project into Unit 8
+- Primary user: course reviewer or instructor validating the assignment rubric
+- Secondary user: a peer or stakeholder exploring the Walki walking-coach demo
+- Tertiary user: the student extending the project beyond the assignment baseline
 
-## Phase 1 Requirements
+## Required Product Capabilities
 
-- Clean repo structure
-- `aiDocs/context.md`
-- Brief PRD
-- Phased roadmap
-- Environment-based secret management
-- Calculator tool
-- Web search tool using Tavily or equivalent
-- Agent that routes to the correct tool
-- Functional web chat interface
-- `scripts/test.sh`
-- Structured logging
-- Walki-branded single-page product presentation that still makes the Phase 1 requirements legible
+- Calculator tool for precise arithmetic and walking-related math
+- Tavily-backed web search tool for current or external information
+- RAG knowledge-base tool over local repo documents with visible source attribution
+- Session-scoped conversation memory so follow-up questions work in one browser tab
+- Functional web chat UI embedded inside the Walki single-page experience
+- Streaming chat responses in the browser
+- Structured logging that captures tool calls, arguments, and results
 
 ## Core User Stories
 
-- As a reviewer, I can inspect the docs and understand what the project does and what is planned next.
-- As a user, I can ask a math question and get an answer that comes from the calculator tool.
-- As a user, I can ask a current-events or factual question and get an answer that uses web search.
-- As a user, I can take a short motivation quiz and see a persona-driven framing of the Walki concept.
-- As a user, I can use a browser chat interface instead of the terminal.
-- As a reviewer, I can tell that the Walki product framing is backed by a real agent rather than a static demo bot.
-- As a reviewer, I can run tests and see structured logs and proper exit behavior.
+- As a reviewer, I can inspect the docs and quickly understand what the project does, how it is structured, and how it maps to the rubric.
+- As a user, I can ask a math question and receive an answer that uses the calculator tool.
+- As a user, I can ask a current-info question and receive an answer that uses web search.
+- As a user, I can ask a question about walking evidence or Walki docs and receive a grounded answer with visible sources.
+- As a user, I can ask a follow-up question in the same chat session without repeating prior context.
+- As a user, I can use the agent in a browser instead of the terminal.
+- As a reviewer, I can confirm the Walki presentation is backed by a real multi-tool agent rather than a static scripted demo.
+- As a reviewer, I can run one validation script and inspect structured logs that show what tools actually ran.
 
-## Non-Goals For Phase 1
+## Non-Goals
 
-- RAG
-- Conversation memory
-- Large document ingestion
-- Multi-step retrieval chains beyond the required two tools
-- Production deployment hardening beyond what is needed to demonstrate the assignment
-- Real wearable integration or persistent user accounts
+- Production deployment hardening beyond what the assignment and demo require
+- Persistent user accounts, wearable integrations, or durable user memory
+- Persistent vector databases for the RAG corpus
+- Broad product expansion beyond the course agent plus Walki demo framing
 
 ## Success Criteria
 
-- The repo documents Phase 1 and Phase 2 clearly.
-- The calculator and web search tools are implemented and tested.
-- The agent routes correctly across representative prompts.
-- The chat UI works end-to-end against the backend.
-- The single-page UI reads as Walki first while still exposing the real agent and tool-routing behavior.
-- `scripts/test.sh` is the default validation entrypoint.
-- Logs are structured and useful for debugging.
+- The repo clearly documents the project state, rubric coverage, and validation path.
+- The three required tools are implemented with clear descriptions, Zod schemas, and tests.
+- The agent can route directly, use a single tool, or chain multiple tools as needed.
+- The web UI works end-to-end and surfaces tool usage, citations, and chat reset behavior.
+- RAG answers are grounded in a local corpus of at least five real documents and expose source labels.
+- Session memory works for follow-up questions until reset or server restart.
+- `scripts/test.sh` is the canonical verification command and passes cleanly.
+- Structured logs are useful for debugging and explicitly include tool calls, arguments, and results.
 
 ## Technical Direction
 
 - Runtime: Node.js
 - Language: TypeScript
-- Agent framework: LangChain plus LangGraph-compatible structure
-- Model provider: Anthropic by default, OpenAI as fallback
+- Agent framework: LangChain with LangGraph-oriented structure
+- Primary chat model: Anthropic Claude Haiku 3.5
+- Fallback chat model: OpenAI GPT-4o mini
 - Web search provider: Tavily
-- Validation style: test-log-fix loops with incremental commits
+- RAG corpus: local `.md` and `.txt` files under `docs/`
+- Memory model: bounded in-memory session history keyed by browser-tab session id
+- Validation style: build-and-test via `scripts/test.sh`, plus repo docs that make rubric verification straightforward
