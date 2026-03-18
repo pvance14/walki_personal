@@ -492,6 +492,72 @@ button {
   border-top: 1px solid var(--line);
 }
 
+.debug-panel {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.debug-panel-header,
+.debug-panel-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.debug-panel-title {
+  margin: 0;
+  color: var(--surface-ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.debug-button {
+  min-height: 40px;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+}
+
+.frontend-logs {
+  max-height: 220px;
+  overflow: auto;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(33, 28, 24, 0.92);
+  color: #f6eee4;
+  font-family: "SFMono-Regular", "Menlo", "Monaco", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.frontend-log-entry + .frontend-log-entry {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.frontend-log-time {
+  color: #f0b18a;
+}
+
+.frontend-log-level {
+  color: #bfe3b3;
+  text-transform: uppercase;
+}
+
+.frontend-log-entry.error .frontend-log-level {
+  color: #ff9e8a;
+}
+
+.frontend-log-message {
+  color: inherit;
+}
+
 textarea {
   width: 100%;
   min-height: 92px;
@@ -588,7 +654,8 @@ button:disabled {
   }
 
   .panel-header,
-  .streak-row {
+  .streak-row,
+  .debug-panel-header {
     flex-direction: column;
   }
 

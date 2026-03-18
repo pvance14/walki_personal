@@ -62,6 +62,7 @@ test("chat.request_completed logs tool arguments and summarized results", async 
 
 test("chat.stream_completed logs tool arguments and errors for traced executions", async () => {
   const { logger, entries } = createLoggerSpy();
+  let streamConfig: { streamMode?: string | string[] } | undefined;
   const runner = createCourseAgentRunner(mockConfig, logger, null, {
     async createAgent() {
       const knowledgeBaseTool = createKnowledgeBaseTool(null);
@@ -69,10 +70,11 @@ test("chat.stream_completed logs tool arguments and errors for traced executions
         async invoke() {
           throw new Error("not used");
         },
-        async stream() {
+        async stream(_input, config) {
+          streamConfig = config;
           await knowledgeBaseTool.invoke({ query: "walking streak recovery" });
           return (async function* () {
-            yield { content: "Grounded reply" };
+            yield [{ content: "Grounded reply" }, { langgraph_node: "model" }];
           })();
         },
       };
@@ -87,6 +89,7 @@ test("chat.stream_completed logs tool arguments and errors for traced executions
   }
 
   assert.deepEqual(chunks, ["Grounded reply"]);
+  assert.equal(streamConfig?.streamMode, "messages");
   const completedEntry = entries.find((entry) => entry.event === "chat.stream_completed");
   assert.ok(completedEntry);
   assert.deepEqual(completedEntry.metadata.toolCalls, [

@@ -24,6 +24,56 @@ const messages = document.getElementById("messages");
 const status = document.getElementById("status");
 const submitButton = document.getElementById("submit-button");
 const resetChatButton = document.getElementById("reset-chat-button");
+const toggleLogsButton = document.getElementById("toggle-logs-button");
+const clearLogsButton = document.getElementById("clear-logs-button");
+const frontendLogs = document.getElementById("frontend-logs");
+
+const FRONTEND_LOG_LIMIT = 80;
+let logsVisible = false;
+
+function formatLogMetadata(metadata) {
+  if (!metadata) {
+    return "";
+  }
+
+  try {
+    return JSON.stringify(metadata);
+  } catch {
+    return String(metadata);
+  }
+}
+
+function appendFrontendLog(level, message, metadata) {
+  if (!frontendLogs) {
+    return;
+  }
+
+  const entry = document.createElement("div");
+  entry.className = `frontend-log-entry ${level}`;
+  const timestamp = new Date().toLocaleTimeString();
+  const details = formatLogMetadata(metadata);
+  entry.innerHTML = `
+    <span class="frontend-log-time">[${timestamp}]</span>
+    <span class="frontend-log-level">${level}</span>
+    <span class="frontend-log-message">${message}${details ? ` ${details}` : ""}</span>
+  `;
+
+  frontendLogs.prepend(entry);
+
+  while (frontendLogs.children.length > FRONTEND_LOG_LIMIT) {
+    frontendLogs.removeChild(frontendLogs.lastElementChild);
+  }
+}
+
+function syncLogPanel() {
+  if (!frontendLogs || !toggleLogsButton) {
+    return;
+  }
+
+  frontendLogs.hidden = !logsVisible;
+  toggleLogsButton.textContent = logsVisible ? "Hide Logs" : "Show Logs";
+  toggleLogsButton.setAttribute("aria-expanded", String(logsVisible));
+}
 
 const SESSION_STORAGE_KEY = "walki-chat-session-id";
 const currentSessionId = (() => {
@@ -510,6 +560,11 @@ function appendWelcomeMessage() {
 }
 
 async function streamResponse(message) {
+  appendFrontendLog("info", "Starting chat request", {
+    message,
+    sessionId: currentSessionId,
+    walkiContext: currentWalkiContext(),
+  });
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: {
@@ -523,8 +578,14 @@ async function streamResponse(message) {
     }),
   });
 
+  appendFrontendLog("info", "Received HTTP response", {
+    ok: response.ok,
+    status: response.status,
+  });
+
   if (!response.ok || !response.body) {
     const errorBody = await response.json().catch(() => ({ error: "Request failed." }));
+    appendFrontendLog("error", "Chat request failed before streaming", errorBody);
     throw new Error(errorBody.error || "Request failed.");
   }
 
@@ -550,6 +611,12 @@ async function streamResponse(message) {
       }
 
       const event = JSON.parse(line);
+      appendFrontendLog("info", "Received stream event", {
+        type: event.type,
+        routeHint: event.routeHint,
+        textLength: typeof event.text === "string" ? event.text.length : 0,
+        toolCalls: Array.isArray(event.toolCalls) ? event.toolCalls.map((toolCall) => toolCall.toolName) : [],
+      });
       if (event.type === "meta" && event.routeHint) {
         status.textContent = `Used: ${humanizeRouteHint(event.routeHint)}`;
         updateAssistantDetails(assistantWrapper, event.routeHint, event.toolCalls || []);
@@ -559,9 +626,11 @@ async function streamResponse(message) {
         messages.scrollTop = messages.scrollHeight;
       }
       if (event.type === "error" && event.error) {
+        appendFrontendLog("error", "Stream returned an error event", { error: event.error });
         throw new Error(event.error);
       }
       if (event.type === "done") {
+        appendFrontendLog("info", "Stream completed");
         status.textContent = "Ready";
       }
     }
@@ -571,6 +640,7 @@ async function streamResponse(message) {
 async function resetChatSession() {
   status.textContent = "Resetting chat...";
   resetChatButton.disabled = true;
+  appendFrontendLog("info", "Resetting chat session", { sessionId: currentSessionId });
 
   try {
     const response = await fetch("/api/chat/reset", {
@@ -585,13 +655,18 @@ async function resetChatSession() {
 
     if (!response.ok) {
       const payload = await response.json().catch(() => ({ error: "Reset failed." }));
+      appendFrontendLog("error", "Chat reset failed", payload);
       throw new Error(payload.error || "Reset failed.");
     }
 
     messages.innerHTML = "";
     appendWelcomeMessage();
     status.textContent = "Chat memory cleared";
+    appendFrontendLog("info", "Chat session reset complete", { sessionId: currentSessionId });
   } catch (error) {
+    appendFrontendLog("error", "Reset request threw an error", {
+      error: error instanceof Error ? error.message : "Reset failed.",
+    });
     appendMessage("assistant", error instanceof Error ? error.message : "Reset failed.", "direct");
     status.textContent = "Reset failed";
   } finally {
@@ -606,6 +681,7 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  appendFrontendLog("info", "Submitting chat form", { message });
   appendMessage("user", message);
   status.textContent = "Waiting for coach...";
   submitButton.disabled = true;
@@ -615,6 +691,9 @@ form.addEventListener("submit", async (event) => {
   try {
     await streamResponse(message);
   } catch (error) {
+    appendFrontendLog("error", "Chat flow failed", {
+      error: error instanceof Error ? error.message : "Unexpected error.",
+    });
     appendMessage("assistant", error instanceof Error ? error.message : "Unexpected error.", "direct");
     status.textContent = "Request failed";
   } finally {
@@ -635,6 +714,21 @@ resetChatButton.addEventListener("click", () => {
   resetChatSession();
 });
 
+toggleLogsButton?.addEventListener("click", () => {
+  logsVisible = !logsVisible;
+  syncLogPanel();
+  appendFrontendLog("info", logsVisible ? "Frontend logs opened" : "Frontend logs hidden");
+});
+
+clearLogsButton?.addEventListener("click", () => {
+  if (!frontendLogs) {
+    return;
+  }
+
+  frontendLogs.innerHTML = "";
+  appendFrontendLog("info", "Frontend logs cleared");
+});
+
 ensureInitialWeights();
 renderHeroPersonas();
 renderQuiz();
@@ -642,3 +736,8 @@ renderResults();
 renderDashboard();
 renderCoachContext();
 appendWelcomeMessage();
+syncLogPanel();
+appendFrontendLog("info", "Walki frontend initialized", {
+  sessionId: currentSessionId,
+  personaId: state.topPersonaId,
+});

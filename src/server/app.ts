@@ -51,9 +51,8 @@ async function handleChatRequest(
   try {
     const rawBody = await readBody(request);
     const body = JSON.parse(rawBody) as ChatRequest;
-    const result = await executeChatRequest(body, dependencies, requestId);
-
     if (!body.stream) {
+      const result = await executeChatRequest(body, dependencies, requestId);
       sendJson(response, 200, result);
       return;
     }

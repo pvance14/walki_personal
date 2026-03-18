@@ -14,7 +14,10 @@ import type { ChatResult, Logger, RouteHint, ToolCallRecord, WalkiContext } from
 
 interface AgentLike {
   invoke(input: { messages: Array<{ role: string; content: string }> }): Promise<unknown>;
-  stream(input: { messages: Array<{ role: string; content: string }> }): Promise<AsyncIterable<unknown>>;
+  stream(
+    input: { messages: Array<{ role: string; content: string }> },
+    config?: { streamMode?: string | string[] },
+  ): Promise<AsyncIterable<unknown>>;
 }
 
 export type StreamUpdate =
@@ -235,7 +238,7 @@ export function createCourseAgentRunner(
       const history = sessionMemory.get(sessionId);
       const stream = await agent.stream({
         messages: [...history, { role: "user", content: userMessage }],
-      });
+      }, { streamMode: "messages" });
       let answer = "";
 
       for await (const chunk of stream) {

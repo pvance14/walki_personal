@@ -139,6 +139,19 @@
                 <button id="submit-button" type="submit" class="button primary">Send</button>
               </div>
             </form>
+
+            <section class="debug-panel" aria-label="Frontend debug logs">
+              <div class="debug-panel-header">
+                <p class="debug-panel-title">Frontend logs</p>
+                <div class="debug-panel-actions">
+                  <button id="clear-logs-button" type="button" class="button secondary debug-button">Clear Logs</button>
+                  <button id="toggle-logs-button" type="button" class="button secondary debug-button" aria-expanded="false">
+                    Show Logs
+                  </button>
+                </div>
+              </div>
+              <div id="frontend-logs" class="frontend-logs" hidden></div>
+            </section>
           </section>
 
           <aside class="proof-panel">
