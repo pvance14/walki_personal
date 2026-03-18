@@ -93,6 +93,7 @@ Source plan docs:
 - Implemented Phase 2 Slice 3: replaced heuristic-only backend tool reporting with actual per-request tool tracing, added multi-tool route summaries, extended streaming metadata to carry executed tool records, and added tracing-focused tests.
 - Implemented Phase 2 Slice 4: added bounded in-memory session history keyed by browser-tab `sessionId`, threaded prior turns into agent invocations, added a reset endpoint, and added session continuity/reset tests.
 - Implemented Phase 2 Slice 5: updated the shipped Walki chat UI to send browser-tab session ids, added chat reset UX, rendered actual tool usage and grounded source chips, and added frontend-contract coverage for streamed tool metadata.
+- Implemented Phase 2 Slice 6: tightened logging with retrieved source summaries, updated `aiDocs/context.md` to the real Phase 2 project state, and marked the active Phase 2 roadmap completed after a passing `scripts/test.sh`.
 
 Source plan docs:
 - `ai/roadmaps/2026-03-11_walki_phase_1_hybrid_single_page_roadmap.md`

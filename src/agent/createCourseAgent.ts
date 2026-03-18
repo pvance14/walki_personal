@@ -139,6 +139,32 @@ function buildUserMessage(message: string, context?: WalkiContext): string {
   return `${contextBlock}\n\nUser request: ${message}`;
 }
 
+function summarizeRetrievedSources(toolCalls: ToolCallRecord[]) {
+  const sourceNames = new Set<string>();
+
+  toolCalls
+    .filter((toolCall) => toolCall.toolName === "knowledge_base" && typeof toolCall.output === "string")
+    .forEach((toolCall) => {
+      try {
+        const output = typeof toolCall.output === "string" ? toolCall.output : "";
+        const parsed = JSON.parse(output) as { results?: Array<{ sourceName?: unknown }> };
+        if (!Array.isArray(parsed.results)) {
+          return;
+        }
+
+        parsed.results.forEach((result) => {
+          if (typeof result?.sourceName === "string" && result.sourceName.trim()) {
+            sourceNames.add(result.sourceName);
+          }
+        });
+      } catch {
+        // Keep tracing resilient if a tool output is not JSON.
+      }
+    });
+
+  return [...sourceNames];
+}
+
 export function createCourseAgentRunner(
   config: AppConfig,
   logger: Logger,
@@ -181,6 +207,7 @@ export function createCourseAgentRunner(
         sessionId,
         toolNames: toolCalls.map((toolCall) => toolCall.toolName),
         toolCallCount: toolCalls.length,
+        retrievedSources: summarizeRetrievedSources(toolCalls),
       });
       return {
         answer,
@@ -222,6 +249,7 @@ export function createCourseAgentRunner(
         sessionId,
         toolNames: toolCalls.map((toolCall) => toolCall.toolName),
         toolCallCount: toolCalls.length,
+        retrievedSources: summarizeRetrievedSources(toolCalls),
       });
       yield { type: "meta", routeHint, toolCalls };
     },
