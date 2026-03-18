@@ -6,6 +6,7 @@ import { inferRouteHint } from "./routeHint.js";
 import { createCalculatorTool } from "../tools/calculator.js";
 import { createKnowledgeBaseTool } from "../tools/knowledgeBase.js";
 import { createWebSearchTool } from "../tools/webSearch.js";
+import { InMemorySessionMemory } from "./sessionMemory.js";
 import { beginToolTrace, deriveRouteHintFromToolCalls, getTrackedToolCalls, withToolTrace } from "./toolTrace.js";
 import type { InMemoryKnowledgeBase } from "../rag/inMemoryKnowledgeBase.js";
 import type { AppConfig } from "../shared/config.js";
@@ -21,8 +22,13 @@ export type StreamUpdate =
   | { type: "meta"; routeHint: RouteHint; toolCalls: ToolCallRecord[] };
 
 export interface AgentRunner {
-  run(message: string, context?: WalkiContext): Promise<ChatResult>;
-  stream(message: string, context?: WalkiContext): AsyncGenerator<StreamUpdate, void, void>;
+  run(message: string, context?: WalkiContext, sessionId?: string): Promise<ChatResult>;
+  stream(message: string, context?: WalkiContext, sessionId?: string): AsyncGenerator<StreamUpdate, void, void>;
+}
+
+interface AgentRunnerOptions {
+  sessionMemory?: InMemorySessionMemory;
+  createAgent?: (config: AppConfig, knowledgeBase: InMemoryKnowledgeBase | null) => Promise<AgentLike>;
 }
 
 function extractText(value: unknown): string {
@@ -137,32 +143,42 @@ export function createCourseAgentRunner(
   config: AppConfig,
   logger: Logger,
   knowledgeBase: InMemoryKnowledgeBase | null = null,
+  options: AgentRunnerOptions = {},
 ): AgentRunner {
+  const sessionMemory = options.sessionMemory ?? new InMemorySessionMemory();
+  const createAgentInstance = options.createAgent ?? createLangChainAgent;
   let cachedAgent: Promise<AgentLike> | null = null;
 
   const getAgent = () => {
     if (!cachedAgent) {
-      cachedAgent = createLangChainAgent(config, knowledgeBase);
+      cachedAgent = createAgentInstance(config, knowledgeBase);
     }
     return cachedAgent;
   };
 
   return {
-    async run(message, context) {
+    async run(message, context, sessionId) {
       const estimatedRouteHint = inferRouteHint(message);
-      logger.info("chat.request_started", { routeHint: estimatedRouteHint, personaId: context?.personaId });
+      logger.info("chat.request_started", { routeHint: estimatedRouteHint, personaId: context?.personaId, sessionId });
       const agent = await getAgent();
+      const userMessage = buildUserMessage(message, context);
+      const history = sessionMemory.get(sessionId);
       const { result: output, toolCalls } = await withToolTrace(() =>
         agent.invoke({
-          messages: [{ role: "user", content: buildUserMessage(message, context) }],
+          messages: [...history, { role: "user", content: userMessage }],
         }),
       );
       const routeHint = deriveRouteHintFromToolCalls(toolCalls);
       const answer = extractText(output);
+      sessionMemory.append(sessionId, [
+        { role: "user", content: userMessage },
+        { role: "assistant", content: answer },
+      ]);
       logger.info("chat.request_completed", {
         routeHint,
         estimatedRouteHint,
         personaId: context?.personaId,
+        sessionId,
         toolNames: toolCalls.map((toolCall) => toolCall.toolName),
         toolCallCount: toolCalls.length,
       });
@@ -173,28 +189,37 @@ export function createCourseAgentRunner(
       };
     },
 
-    async *stream(message, context) {
+    async *stream(message, context, sessionId) {
       const estimatedRouteHint = inferRouteHint(message);
-      logger.info("chat.stream_started", { routeHint: estimatedRouteHint, personaId: context?.personaId });
+      logger.info("chat.stream_started", { routeHint: estimatedRouteHint, personaId: context?.personaId, sessionId });
       const agent = await getAgent();
       const traceContext = beginToolTrace();
+      const userMessage = buildUserMessage(message, context);
+      const history = sessionMemory.get(sessionId);
       const stream = await agent.stream({
-        messages: [{ role: "user", content: buildUserMessage(message, context) }],
+        messages: [...history, { role: "user", content: userMessage }],
       });
+      let answer = "";
 
       for await (const chunk of stream) {
         const text = extractText(chunk);
         if (text) {
+          answer += text;
           yield { type: "chunk", text };
         }
       }
 
       const toolCalls = getTrackedToolCalls(traceContext);
       const routeHint = deriveRouteHintFromToolCalls(toolCalls);
+      sessionMemory.append(sessionId, [
+        { role: "user", content: userMessage },
+        { role: "assistant", content: answer },
+      ]);
       logger.info("chat.stream_completed", {
         routeHint,
         estimatedRouteHint,
         personaId: context?.personaId,
+        sessionId,
         toolNames: toolCalls.map((toolCall) => toolCall.toolName),
         toolCallCount: toolCalls.length,
       });

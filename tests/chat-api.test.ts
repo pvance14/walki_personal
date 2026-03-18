@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createLogger } from "../src/shared/logger.js";
-import { executeChatRequest, streamChatEvents } from "../src/server/app.js";
+import { executeChatRequest, resetChatSession, streamChatEvents } from "../src/server/app.js";
 import type { AgentRunner, StreamUpdate } from "../src/agent/createCourseAgent.js";
 
 class MockRunner implements AgentRunner {
@@ -74,4 +74,37 @@ test("executeChatRequest accepts optional Walki context", async () => {
   );
 
   assert.equal(result.answer, "echo:Give me a push");
+});
+
+test("resetChatSession clears a provided session id", () => {
+  let resetSessionId = "";
+  const payload = resetChatSession(
+    { sessionId: "tab-reset" },
+    {
+      logger: createLogger({ test: "chat-api" }),
+      resetSession(sessionId) {
+        resetSessionId = sessionId ?? "";
+        return true;
+      },
+    },
+  );
+
+  assert.equal(payload.ok, true);
+  assert.equal(resetSessionId, "tab-reset");
+});
+
+test("resetChatSession rejects a missing session id", () => {
+  assert.throws(
+    () =>
+      resetChatSession(
+        {},
+        {
+          logger: createLogger({ test: "chat-api" }),
+          resetSession() {
+            return false;
+          },
+        },
+      ),
+    /sessionId is required/i,
+  );
 });

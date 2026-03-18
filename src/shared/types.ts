@@ -15,6 +15,10 @@ export interface ChatRequest {
   walkiContext?: WalkiContext;
 }
 
+export interface ChatResetRequest {
+  sessionId?: string;
+}
+
 export interface ToolCallRecord {
   toolName: string;
   input: Record<string, unknown>;

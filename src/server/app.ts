@@ -2,13 +2,14 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import type { ChatRequest, Logger, WalkiContext } from "../shared/types.js";
+import type { ChatRequest, ChatResetRequest, Logger, WalkiContext } from "../shared/types.js";
 import type { AgentRunner } from "../agent/createCourseAgent.js";
 
 interface AppDependencies {
   logger: Logger;
   runner: AgentRunner;
   publicDir: string;
+  resetSession: (sessionId?: string) => boolean;
 }
 
 export interface StreamEvent {
@@ -16,7 +17,7 @@ export interface StreamEvent {
   routeHint?: string;
   text?: string;
   personaId?: string;
-  toolCalls?: ChatRequest extends never ? never : import("../shared/types.js").ToolCallRecord[];
+  toolCalls?: import("../shared/types.js").ToolCallRecord[];
 }
 
 const contentTypes = new Map<string, string>([
@@ -63,7 +64,13 @@ async function handleChatRequest(
       connection: "keep-alive",
     });
 
-    for await (const event of streamChatEvents(body.message, dependencies, requestId, body.walkiContext)) {
+    for await (const event of streamChatEvents(
+      body.message,
+      dependencies,
+      requestId,
+      body.walkiContext,
+      sanitizeSessionId(body.sessionId),
+    )) {
       response.write(`${JSON.stringify(event)}\n`);
     }
     response.end();
@@ -76,6 +83,39 @@ async function handleChatRequest(
     }
     response.end(`${JSON.stringify({ type: "error", error: message })}\n`);
   }
+}
+
+async function handleChatResetRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  dependencies: AppDependencies,
+) {
+  const logger = dependencies.logger;
+
+  try {
+    const rawBody = await readBody(request);
+    const body = JSON.parse(rawBody) as ChatResetRequest;
+    sendJson(response, 200, resetChatSession(body, dependencies));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected server error.";
+    logger.error("http.chat_reset_failed", { error: message });
+    sendJson(response, 400, { error: message });
+  }
+}
+
+export function resetChatSession(
+  body: ChatResetRequest,
+  dependencies: Pick<AppDependencies, "logger" | "resetSession">,
+) {
+  const sessionId = sanitizeSessionId(body.sessionId);
+
+  if (!sessionId) {
+    throw new Error("sessionId is required");
+  }
+
+  const cleared = dependencies.resetSession(sessionId);
+  dependencies.logger.info("http.chat_reset", { sessionId, cleared });
+  return { ok: true, cleared };
 }
 
 export async function executeChatRequest(
@@ -94,7 +134,7 @@ export async function executeChatRequest(
     personaId: walkiContext?.personaId,
     sessionId: sanitizeSessionId(body.sessionId),
   });
-  return dependencies.runner.run(message, walkiContext);
+  return dependencies.runner.run(message, walkiContext, sanitizeSessionId(body.sessionId));
 }
 
 export async function* streamChatEvents(
@@ -102,6 +142,7 @@ export async function* streamChatEvents(
   dependencies: Pick<AppDependencies, "logger" | "runner">,
   requestId = randomUUID(),
   walkiContext?: WalkiContext,
+  sessionId?: string,
 ): AsyncGenerator<StreamEvent, void, void> {
   const trimmed = message.trim();
   if (!trimmed) {
@@ -112,9 +153,10 @@ export async function* streamChatEvents(
   dependencies.logger.info("http.chat_stream_received", {
     requestId,
     personaId: sanitizedContext?.personaId,
+    sessionId,
   });
   yield { type: "meta", personaId: sanitizedContext?.personaId };
-  for await (const update of dependencies.runner.stream(trimmed, sanitizedContext)) {
+  for await (const update of dependencies.runner.stream(trimmed, sanitizedContext, sessionId)) {
     if (update.type === "chunk") {
       yield { type: "chunk", text: update.text };
       continue;
@@ -128,6 +170,14 @@ export async function* streamChatEvents(
     };
   }
   yield { type: "done" };
+}
+
+export async function* streamChatEventsFromRequest(
+  body: ChatRequest,
+  dependencies: Pick<AppDependencies, "logger" | "runner">,
+  requestId = randomUUID(),
+): AsyncGenerator<StreamEvent, void, void> {
+  yield* streamChatEvents(body.message, dependencies, requestId, body.walkiContext, sanitizeSessionId(body.sessionId));
 }
 
 function sanitizeSessionId(sessionId?: string) {
@@ -194,6 +244,11 @@ export function createApp(dependencies: AppDependencies) {
 
     if (request.method === "POST" && request.url === "/api/chat") {
       await handleChatRequest(request, response, dependencies);
+      return;
+    }
+
+    if (request.method === "POST" && request.url === "/api/chat/reset") {
+      await handleChatResetRequest(request, response, dependencies);
       return;
     }
 
