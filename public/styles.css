@@ -219,6 +219,7 @@ button {
 .top-card-kicker,
 .sample-quote,
 .message-meta,
+.message-sources-label,
 .muted {
   font-size: 0.9rem;
 }
@@ -433,6 +434,13 @@ button {
   max-width: min(42rem, 100%);
 }
 
+.message-sources,
+.source-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
 .message.user {
   justify-self: end;
 }
@@ -457,6 +465,24 @@ button {
 
 .message.user .message-body {
   background: rgba(237, 229, 217, 0.92);
+}
+
+.message-meta,
+.message-sources-label {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+}
+
+.source-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--surface-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .composer {
@@ -517,7 +543,7 @@ a:focus-visible {
 
 button:disabled {
   opacity: 0.6;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 @media (max-width: 980px) {

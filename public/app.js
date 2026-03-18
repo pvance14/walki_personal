@@ -23,6 +23,23 @@ const messageInput = document.getElementById("message");
 const messages = document.getElementById("messages");
 const status = document.getElementById("status");
 const submitButton = document.getElementById("submit-button");
+const resetChatButton = document.getElementById("reset-chat-button");
+
+const SESSION_STORAGE_KEY = "walki-chat-session-id";
+const currentSessionId = (() => {
+  try {
+    const existing = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (existing) {
+      return existing;
+    }
+
+    const created = window.crypto?.randomUUID?.() ?? `walki-${Date.now()}`;
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, created);
+    return created;
+  } catch {
+    return `walki-${Date.now()}`;
+  }
+})();
 
 function getPersona(personaId) {
   return personas.find((persona) => persona.id === personaId) ?? personas[0];
@@ -364,11 +381,64 @@ function renderCoachContext() {
       <div><span>Steps</span><strong>${state.todaySteps.toLocaleString()} / ${state.dailyGoal.toLocaleString()}</strong></div>
       <div><span>Streak</span><strong>${state.streakCurrent} days</strong></div>
       <div><span>Expected tone</span><strong>${persona.accent}</strong></div>
+      <div><span>Chat session</span><strong>${currentSessionId.slice(0, 8)}…</strong></div>
     </div>
   `;
 }
 
-function appendMessage(role, text, routeHint) {
+function humanizeRouteHint(routeHint) {
+  switch (routeHint) {
+    case "knowledge_base":
+      return "knowledge base";
+    case "multi_tool":
+      return "multi-tool chain";
+    case "web_search":
+      return "web search";
+    case "calculator":
+      return "calculator";
+    default:
+      return "direct";
+  }
+}
+
+function uniqueToolNames(toolCalls = []) {
+  return [...new Set(toolCalls.map((toolCall) => toolCall.toolName))];
+}
+
+function parseKnowledgeBaseSources(toolCalls = []) {
+  const sources = [];
+
+  toolCalls
+    .filter((toolCall) => toolCall.toolName === "knowledge_base" && typeof toolCall.output === "string")
+    .forEach((toolCall) => {
+      try {
+        const parsed = JSON.parse(toolCall.output);
+        if (!Array.isArray(parsed.results)) {
+          return;
+        }
+
+        parsed.results.forEach((result) => {
+          if (!result?.sourceName) {
+            return;
+          }
+
+          sources.push({
+            sourceName: result.sourceName,
+            category: result.category || "docs",
+          });
+        });
+      } catch {
+        // Ignore malformed tool output and keep the chat UI resilient.
+      }
+    });
+
+  return sources.filter(
+    (source, index, array) =>
+      array.findIndex((candidate) => candidate.sourceName === source.sourceName) === index,
+  );
+}
+
+function appendMessage(role, text, routeHint, toolCalls = []) {
   const wrapper = document.createElement("article");
   wrapper.className = `message ${role}`;
 
@@ -384,8 +454,13 @@ function appendMessage(role, text, routeHint) {
   if (role === "assistant") {
     const meta = document.createElement("p");
     meta.className = "message-meta";
-    meta.textContent = `Used: ${routeHint || "direct"}`;
+    meta.textContent = `Used: ${humanizeRouteHint(routeHint || "direct")}`;
     wrapper.append(meta);
+
+    const sources = document.createElement("div");
+    sources.className = "message-sources";
+    wrapper.append(sources);
+    updateAssistantDetails(wrapper, routeHint, toolCalls);
   }
 
   messages.appendChild(wrapper);
@@ -393,11 +468,45 @@ function appendMessage(role, text, routeHint) {
   return wrapper;
 }
 
-function updateAssistantRoute(wrapper, routeHint) {
+function updateAssistantDetails(wrapper, routeHint, toolCalls = []) {
   const meta = wrapper.querySelector(".message-meta");
   if (meta) {
-    meta.textContent = `Used: ${routeHint}`;
+    const toolNames = uniqueToolNames(toolCalls);
+    const detail = toolNames.length ? ` (${toolNames.join(" + ")})` : "";
+    meta.textContent = `Used: ${humanizeRouteHint(routeHint || "direct")}${detail}`;
   }
+
+  const sourcesContainer = wrapper.querySelector(".message-sources");
+  if (!sourcesContainer) {
+    return;
+  }
+
+  const sources = parseKnowledgeBaseSources(toolCalls);
+  if (sources.length === 0) {
+    sourcesContainer.innerHTML = "";
+    return;
+  }
+
+  sourcesContainer.innerHTML = `
+    <p class="message-sources-label">Sources</p>
+    <div class="source-chip-row">
+      ${sources
+        .map(
+          (source) => `
+            <span class="source-chip">${source.sourceName} · ${source.category}</span>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function appendWelcomeMessage() {
+  appendMessage(
+    "assistant",
+    "Tell me where you are in your step goal, ask for current walking guidance, ask what our local docs say about walking benefits, or ask for a motivation style that matches your top persona.",
+    "direct",
+  );
 }
 
 async function streamResponse(message) {
@@ -409,6 +518,7 @@ async function streamResponse(message) {
     body: JSON.stringify({
       message,
       stream: true,
+      sessionId: currentSessionId,
       walkiContext: currentWalkiContext(),
     }),
   });
@@ -441,8 +551,8 @@ async function streamResponse(message) {
 
       const event = JSON.parse(line);
       if (event.type === "meta" && event.routeHint) {
-        status.textContent = `Routing: ${event.routeHint}`;
-        updateAssistantRoute(assistantWrapper, event.routeHint);
+        status.textContent = `Used: ${humanizeRouteHint(event.routeHint)}`;
+        updateAssistantDetails(assistantWrapper, event.routeHint, event.toolCalls || []);
       }
       if (event.type === "chunk" && typeof event.text === "string") {
         assistantBody.textContent += event.text;
@@ -455,6 +565,37 @@ async function streamResponse(message) {
         status.textContent = "Ready";
       }
     }
+  }
+}
+
+async function resetChatSession() {
+  status.textContent = "Resetting chat...";
+  resetChatButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/chat/reset", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sessionId: currentSessionId,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ error: "Reset failed." }));
+      throw new Error(payload.error || "Reset failed.");
+    }
+
+    messages.innerHTML = "";
+    appendWelcomeMessage();
+    status.textContent = "Chat memory cleared";
+  } catch (error) {
+    appendMessage("assistant", error instanceof Error ? error.message : "Reset failed.", "direct");
+    status.textContent = "Reset failed";
+  } finally {
+    resetChatButton.disabled = false;
   }
 }
 
@@ -490,14 +631,14 @@ document.querySelectorAll("[data-prompt]").forEach((button) => {
   });
 });
 
+resetChatButton.addEventListener("click", () => {
+  resetChatSession();
+});
+
 ensureInitialWeights();
 renderHeroPersonas();
 renderQuiz();
 renderResults();
 renderDashboard();
 renderCoachContext();
-appendMessage(
-  "assistant",
-  "Tell me where you are in your step goal, ask for current walking guidance, or ask for a motivation style that matches your top persona.",
-  "direct",
-);
+appendWelcomeMessage();

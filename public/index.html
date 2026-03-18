@@ -89,7 +89,7 @@
           <p class="eyebrow">Step 4</p>
           <h2>Talk to Walki Coach.</h2>
           <p>
-            This chat stays true to the Phase 1 course project requirements: a real web UI, a real agent, and visible routing between direct responses, calculator, and web search.
+            This chat now shows the full Phase 2 agent shape: a real web UI, a real multi-tool agent, visible tool usage, grounded local-doc citations, and session memory that survives follow-up questions until you reset the chat.
           </p>
         </div>
 
@@ -103,6 +103,7 @@
               <div class="pill-row">
                 <span class="pill">calculator</span>
                 <span class="pill">web_search</span>
+                <span class="pill">knowledge_base</span>
                 <span id="active-persona-pill" class="pill subtle">persona: Sunny</span>
               </div>
             </div>
@@ -113,6 +114,9 @@
               </button>
               <button class="starter" data-prompt="What are the current recommendations for daily walking for adults?" type="button">
                 Current guidance
+              </button>
+              <button class="starter" data-prompt="What do our local docs say about the long-term benefits of walking for healthy aging?" type="button">
+                Local evidence
               </button>
               <button class="starter" data-prompt="Give me a tough-love message to finish my streak today." type="button">
                 Motivation
@@ -131,6 +135,7 @@
                 required
               ></textarea>
               <div class="composer-actions">
+                <button id="reset-chat-button" type="button" class="button secondary">Reset Chat</button>
                 <button id="submit-button" type="submit" class="button primary">Send</button>
               </div>
             </form>
@@ -139,12 +144,14 @@
           <aside class="proof-panel">
             <div class="card proof-card">
               <p class="eyebrow">Phase 1 proof</p>
-              <h3>Why this still satisfies the course project</h3>
+              <h3>Why this now covers the Unit 8 bar</h3>
               <ul class="proof-list">
                 <li>Functional web chat interface</li>
                 <li>LangChain/LangGraph-style tool-routed agent</li>
                 <li>`calculator` for precise walking math</li>
                 <li>`web_search` for current external info</li>
+                <li>`knowledge_base` for grounded local docs and visible citations</li>
+                <li>Session memory plus chat reset scoped to one browser tab</li>
                 <li>Structured logging and `scripts/test.sh` remain repo-level validation paths</li>
               </ul>
             </div>
