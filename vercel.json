@@ -1,6 +1,9 @@
 {
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "functions": {
+    "api/chat.ts": {
+      "maxDuration": 60,
+      "includeFiles": "docs/**"
+    }
+  }
 }

@@ -75,6 +75,30 @@ Run `scripts/test.sh`
 
 This builds the TypeScript project and runs the Node test suite. The current test coverage includes calculator behavior, web search normalization and failure handling, RAG document loading, knowledge-base output, session memory, tool tracing, and the chat API contract.
 
+## Deploy to Vercel
+
+This repo can now deploy on Vercel using static assets from `public/` plus serverless functions under `api/`.
+
+1. Push the repo to GitHub.
+2. Import the repo into Vercel.
+3. Use the `Other` framework preset if Vercel asks.
+4. Add the required environment variables in Project Settings:
+   - `MODEL_PROVIDER`
+   - `MODEL_NAME`
+   - `EMBEDDING_PROVIDER`
+   - `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`
+   - `TAVILY_API_KEY` if you want live web search
+   - `RAG_DOCS_DIR=docs`
+   - `OPENAI_EMBEDDING_MODEL` if `EMBEDDING_PROVIDER=openai`
+5. Deploy the project.
+
+### Vercel notes
+
+- `vercel.json` configures the chat function to include `docs/**` so the local RAG corpus is available at runtime.
+- The `/api/chat` function is configured for up to 60 seconds to fit Vercel Hobby limits.
+- Session memory remains in-memory. On Vercel, that means follow-up context is best-effort per warm function instance instead of guaranteed durable storage.
+- If you change environment variables in Vercel, redeploy so the new values are applied.
+
 ## RAG corpus and citations
 
 - The local corpus lives under `docs/`.
