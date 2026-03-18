@@ -1,4 +1,5 @@
 import { ChatAnthropic } from "@langchain/anthropic";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { createAgent } from "langchain";
 import { COURSE_AGENT_SYSTEM_PROMPT } from "./systemPrompt.js";
@@ -60,6 +61,30 @@ function extractText(value: unknown): string {
   }
 
   return "";
+}
+
+function extractAssistantStreamText(value: unknown): string {
+  const isAssistantMessageLike = (message: unknown) =>
+    AIMessage.isInstance(message) ||
+    AIMessageChunk.isInstance(message) ||
+    (typeof message === "object" &&
+      message !== null &&
+      ("type" in message ? (message as { type?: unknown }).type === "ai" : false ||
+        "role" in message ? (message as { role?: unknown }).role === "assistant" : false));
+
+  if (Array.isArray(value) && value.length > 0) {
+    const [message] = value;
+    if (isAssistantMessageLike(message)) {
+      return extractText((message as { content?: unknown }).content);
+    }
+    return "";
+  }
+
+  if (isAssistantMessageLike(value)) {
+    return extractText((value as { content?: unknown }).content);
+  }
+
+  return extractText(value);
 }
 
 function buildModel(config: AppConfig) {
@@ -242,7 +267,7 @@ export function createCourseAgentRunner(
       let answer = "";
 
       for await (const chunk of stream) {
-        const text = extractText(chunk);
+        const text = extractAssistantStreamText(chunk);
         if (text) {
           answer += text;
           yield { type: "chunk", text };

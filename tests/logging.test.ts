@@ -74,7 +74,7 @@ test("chat.stream_completed logs tool arguments and errors for traced executions
           streamConfig = config;
           await knowledgeBaseTool.invoke({ query: "walking streak recovery" });
           return (async function* () {
-            yield [{ content: "Grounded reply" }, { langgraph_node: "model" }];
+            yield [{ type: "ai", content: "Grounded reply" }, { langgraph_node: "model" }];
           })();
         },
       };
@@ -105,4 +105,32 @@ test("chat.stream_completed logs tool arguments and errors for traced executions
       error: undefined,
     },
   ]);
+});
+
+test("streaming only emits assistant text and ignores tool payload message chunks", async () => {
+  const { logger } = createLoggerSpy();
+  const runner = createCourseAgentRunner(mockConfig, logger, null, {
+    async createAgent() {
+      return {
+        async invoke() {
+          throw new Error("not used");
+        },
+        async stream() {
+          return (async function* () {
+            yield [{ type: "tool", content: "{\"query\":\"walking benefits\"}" }, { langgraph_node: "tools" }];
+            yield [{ type: "ai", content: "Clean answer" }, { langgraph_node: "model" }];
+          })();
+        },
+      };
+    },
+  });
+
+  const chunks: string[] = [];
+  for await (const update of runner.stream("Use local docs")) {
+    if (update.type === "chunk") {
+      chunks.push(update.text);
+    }
+  }
+
+  assert.deepEqual(chunks, ["Clean answer"]);
 });

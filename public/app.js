@@ -31,6 +31,58 @@ const frontendLogs = document.getElementById("frontend-logs");
 const FRONTEND_LOG_LIMIT = 80;
 let logsVisible = false;
 
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatInlineMarkdown(text) {
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function renderMessageMarkup(text) {
+  const normalized = String(text || "").replace(/\r\n/g, "\n").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  const blocks = normalized.split(/\n\s*\n/);
+  return blocks
+    .map((block) => {
+      const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+      if (lines.length === 0) {
+        return "";
+      }
+
+      if (lines.length === 1 && /^---+$/.test(lines[0])) {
+        return "<hr />";
+      }
+
+      if (lines.every((line) => /^[-*]\s+/.test(line))) {
+        return `<ul>${lines.map((line) => `<li>${formatInlineMarkdown(line.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
+      }
+
+      return `<p>${lines.map((line) => formatInlineMarkdown(line)).join("<br />")}</p>`;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
+function setMessageBodyContent(element, text) {
+  if (!element) {
+    return;
+  }
+
+  element.dataset.rawText = text;
+  element.innerHTML = renderMessageMarkup(text);
+}
+
 function formatLogMetadata(metadata) {
   if (!metadata) {
     return "";
@@ -498,7 +550,7 @@ function appendMessage(role, text, routeHint, toolCalls = []) {
 
   const body = document.createElement("div");
   body.className = "message-body";
-  body.textContent = text;
+  setMessageBodyContent(body, text);
   wrapper.append(label, body);
 
   if (role === "assistant") {
@@ -615,14 +667,15 @@ async function streamResponse(message) {
         type: event.type,
         routeHint: event.routeHint,
         textLength: typeof event.text === "string" ? event.text.length : 0,
-        toolCalls: Array.isArray(event.toolCalls) ? event.toolCalls.map((toolCall) => toolCall.toolName) : [],
+        toolCalls: Array.isArray(event.toolCalls) ? event.toolCalls : [],
       });
       if (event.type === "meta" && event.routeHint) {
         status.textContent = `Used: ${humanizeRouteHint(event.routeHint)}`;
         updateAssistantDetails(assistantWrapper, event.routeHint, event.toolCalls || []);
       }
       if (event.type === "chunk" && typeof event.text === "string") {
-        assistantBody.textContent += event.text;
+        const nextText = `${assistantBody.dataset.rawText || ""}${event.text}`;
+        setMessageBodyContent(assistantBody, nextText);
         messages.scrollTop = messages.scrollHeight;
       }
       if (event.type === "error" && event.error) {
