@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createLogger } from "../src/shared/logger.js";
-import { executeChatRequest, resetChatSession, streamChatEvents, streamChatEventsFromRequest } from "../src/server/app.js";
+import { executeChatRequest, getCorpusMetadataPayload, resetChatSession, streamChatEvents, streamChatEventsFromRequest } from "../src/server/app.js";
 import type { AgentRunner, StreamUpdate } from "../src/agent/createCourseAgent.js";
 
 class MockRunner implements AgentRunner {
@@ -164,4 +164,32 @@ test("resetChatSession rejects a missing session id", () => {
       ),
     /sessionId is required/i,
   );
+});
+
+test("getCorpusMetadataPayload returns debug corpus metadata", () => {
+  const payload = getCorpusMetadataPayload({
+    getCorpusMetadata() {
+      return {
+        chunkCount: 17,
+        sourceCount: 4,
+        categories: [
+          {
+            category: "evidence",
+            sources: [
+              {
+                sourceName: "healthy-aging.txt",
+                sourcePath: "evidence/healthy-aging.txt",
+                category: "evidence",
+              },
+            ],
+          },
+        ],
+      };
+    },
+  });
+
+  assert.equal(payload.chunkCount, 17);
+  assert.equal(payload.sourceCount, 4);
+  assert.equal(payload.categories[0]?.category, "evidence");
+  assert.equal(payload.categories[0]?.sources[0]?.sourceName, "healthy-aging.txt");
 });

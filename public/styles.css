@@ -614,6 +614,61 @@ textarea {
   padding-left: 1.2rem;
 }
 
+.corpus-proof {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.corpus-proof-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.corpus-proof-stat {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.corpus-proof-stat span,
+.corpus-proof-category-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.corpus-proof-stat strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.05rem;
+}
+
+.corpus-proof-category + .corpus-proof-category {
+  margin-top: 0.85rem;
+}
+
+.corpus-proof-category-label {
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.corpus-proof-source-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.corpus-proof-source-list li + li {
+  margin-top: 0.2rem;
+}
+
+.corpus-proof-empty {
+  margin: 0;
+}
+
 .context-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -662,7 +717,8 @@ button:disabled {
   .top-three,
   .persona-gallery,
   .context-grid,
-  .metric-band {
+  .metric-band,
+  .corpus-proof-summary {
     grid-template-columns: 1fr;
   }
 }

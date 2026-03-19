@@ -29,7 +29,7 @@ export function createKnowledgeBaseTool(knowledgeBase: InMemoryKnowledgeBase | n
           });
         }
 
-        const results = await knowledgeBase.search(query, 3, 0.2);
+        const results = await knowledgeBase.search(query, 6, 0.15);
         if (results.length === 0) {
           return JSON.stringify({
             query,

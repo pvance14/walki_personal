@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import type { ChatRequest, ChatResetRequest, Logger, WalkiContext } from "../shared/types.js";
+import type { ChatRequest, ChatResetRequest, CorpusMetadata, Logger, WalkiContext } from "../shared/types.js";
 import type { AgentRunner } from "../agent/createCourseAgent.js";
 
 interface AppDependencies {
@@ -10,6 +10,7 @@ interface AppDependencies {
   runner: AgentRunner;
   publicDir: string;
   resetSession: (sessionId?: string) => boolean;
+  getCorpusMetadata?: () => CorpusMetadata | null;
 }
 
 export interface StreamEvent {
@@ -100,6 +101,14 @@ async function handleChatResetRequest(
     logger.error("http.chat_reset_failed", { error: message });
     sendJson(response, 400, { error: message });
   }
+}
+
+export function getCorpusMetadataPayload(dependencies: Pick<AppDependencies, "getCorpusMetadata">) {
+  return dependencies.getCorpusMetadata?.() ?? {
+    chunkCount: 0,
+    sourceCount: 0,
+    categories: [],
+  };
 }
 
 export function resetChatSession(
@@ -248,6 +257,11 @@ export function createApp(dependencies: AppDependencies) {
 
     if (request.method === "POST" && request.url === "/api/chat/reset") {
       await handleChatResetRequest(request, response, dependencies);
+      return;
+    }
+
+    if (request.method === "GET" && request.url === "/api/debug/corpus") {
+      sendJson(response, 200, getCorpusMetadataPayload(dependencies));
       return;
     }
 

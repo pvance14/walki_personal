@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { createInMemoryKnowledgeBase } from "../src/rag/inMemoryKnowledgeBase.js";
+import { createCorpusCatalogTool } from "../src/tools/corpusCatalog.js";
 import { createKnowledgeBaseTool } from "../src/tools/knowledgeBase.js";
 
 class KeywordEmbeddings implements EmbeddingsInterface<number[]> {
@@ -77,4 +78,41 @@ test("knowledge base tool reports when the local corpus is unavailable", async (
 
   assert.equal(output.status, "unavailable");
   assert.deepEqual(output.results, []);
+});
+
+test("corpus catalog tool lists indexed source files by category", async () => {
+  const embeddings = new KeywordEmbeddings();
+  const knowledgeBase = await createInMemoryKnowledgeBase(
+    [
+      {
+        id: "evidence::healthy-aging.txt::chunk-1",
+        pageContent: "Walking supports healthy aging.",
+        metadata: {
+          sourcePath: "evidence/healthy-aging.txt",
+          sourceName: "healthy-aging.txt",
+          category: "evidence",
+        },
+      },
+      {
+        id: "walki::product-overview.md::chunk-1",
+        pageContent: "Walki helps people build walking consistency.",
+        metadata: {
+          sourcePath: "walki/product-overview.md",
+          sourceName: "product-overview.md",
+          category: "walki",
+        },
+      },
+    ],
+    embeddings,
+  );
+
+  const tool = createCorpusCatalogTool(knowledgeBase);
+  const rawOutput = await tool.invoke({});
+  const output = JSON.parse(rawOutput);
+
+  assert.equal(output.status, "ok");
+  assert.equal(output.sourceCount, 2);
+  assert.equal(output.chunkCount, 2);
+  assert.equal(output.categories[0]?.category, "evidence");
+  assert.equal(output.categories[1]?.category, "walki");
 });

@@ -1,4 +1,5 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import type { CorpusMetadata, CorpusSource } from "../shared/types.js";
 import type { KnowledgeDocument, SearchMatch } from "./types.js";
 
 interface IndexedDocument {
@@ -37,7 +38,36 @@ export class InMemoryKnowledgeBase {
     return this.entries.length;
   }
 
-  async search(query: string, limit = 3, minScore = 0.2): Promise<SearchMatch[]> {
+  get corpusMetadata(): CorpusMetadata {
+    const sourcesByPath = new Map<string, CorpusSource>();
+    const sourcesByCategory = new Map<string, CorpusSource[]>();
+
+    for (const entry of this.entries) {
+      const { sourcePath, sourceName, category } = entry.document.metadata;
+      if (!sourcesByPath.has(sourcePath)) {
+        const source = { sourceName, sourcePath, category };
+        sourcesByPath.set(sourcePath, source);
+        const current = sourcesByCategory.get(category) ?? [];
+        current.push(source);
+        sourcesByCategory.set(category, current);
+      }
+    }
+
+    const categories = Array.from(sourcesByCategory.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([category, sources]) => ({
+        category,
+        sources: sources.sort((left, right) => left.sourceName.localeCompare(right.sourceName)),
+      }));
+
+    return {
+      chunkCount: this.entries.length,
+      sourceCount: sourcesByPath.size,
+      categories,
+    };
+  }
+
+  async search(query: string, limit = 6, minScore = 0.15): Promise<SearchMatch[]> {
     const queryVector = await this.embeddings.embedQuery(query);
     const matches = this.entries
       .map(({ document, vector }) => ({

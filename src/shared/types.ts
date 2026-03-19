@@ -1,5 +1,20 @@
 export type RouteHint = "calculator" | "web_search" | "knowledge_base" | "multi_tool" | "direct";
 
+export interface CorpusSource {
+  sourceName: string;
+  sourcePath: string;
+  category: string;
+}
+
+export interface CorpusMetadata {
+  chunkCount: number;
+  sourceCount: number;
+  categories: Array<{
+    category: string;
+    sources: CorpusSource[];
+  }>;
+}
+
 export interface WalkiContext {
   personaId?: string;
   personaName?: string;

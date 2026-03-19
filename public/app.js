@@ -17,6 +17,7 @@ const personaGallery = document.getElementById("persona-gallery");
 const dashboardShell = document.getElementById("dashboard-shell");
 const heroPersonas = document.getElementById("hero-personas");
 const coachContext = document.getElementById("coach-context");
+const corpusProof = document.getElementById("corpus-proof");
 const activePersonaPill = document.getElementById("active-persona-pill");
 const form = document.getElementById("chat-form");
 const messageInput = document.getElementById("message");
@@ -488,6 +489,71 @@ function renderCoachContext() {
   `;
 }
 
+function renderCorpusProof(data) {
+  if (!corpusProof) {
+    return;
+  }
+
+  if (!data || !Array.isArray(data.categories)) {
+    corpusProof.innerHTML = `<p class="corpus-proof-empty">Corpus metadata is unavailable.</p>`;
+    return;
+  }
+
+  corpusProof.className = "corpus-proof";
+  corpusProof.innerHTML = `
+    <div class="corpus-proof-summary">
+      <div class="corpus-proof-stat">
+        <span>Indexed sources</span>
+        <strong>${Number(data.sourceCount || 0)}</strong>
+      </div>
+      <div class="corpus-proof-stat">
+        <span>Indexed chunks</span>
+        <strong>${Number(data.chunkCount || 0)}</strong>
+      </div>
+    </div>
+    <div>
+      ${data.categories
+        .map(
+          (entry) => `
+            <section class="corpus-proof-category">
+              <span class="corpus-proof-category-label">${entry.category}</span>
+              <ul class="corpus-proof-source-list">
+                ${entry.sources.map((source) => `<li>${source.sourceName}</li>`).join("")}
+              </ul>
+            </section>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+async function loadCorpusProof() {
+  if (!corpusProof) {
+    return;
+  }
+
+  try {
+    appendFrontendLog("info", "Loading corpus proof metadata");
+    const response = await fetch("/api/debug/corpus");
+    if (!response.ok) {
+      throw new Error(`Corpus metadata request failed with status ${response.status}`);
+    }
+
+    const payload = await response.json();
+    renderCorpusProof(payload);
+    appendFrontendLog("info", "Corpus proof loaded", {
+      sourceCount: payload.sourceCount,
+      chunkCount: payload.chunkCount,
+    });
+  } catch (error) {
+    renderCorpusProof(null);
+    appendFrontendLog("error", "Failed to load corpus proof", {
+      error: error instanceof Error ? error.message : "Corpus metadata unavailable.",
+    });
+  }
+}
+
 function humanizeRouteHint(routeHint) {
   switch (routeHint) {
     case "knowledge_base":
@@ -794,3 +860,4 @@ appendFrontendLog("info", "Walki frontend initialized", {
   sessionId: currentSessionId,
   personaId: state.topPersonaId,
 });
+loadCorpusProof();

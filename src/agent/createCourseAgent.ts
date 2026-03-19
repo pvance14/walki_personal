@@ -5,13 +5,14 @@ import { createAgent } from "langchain";
 import { COURSE_AGENT_SYSTEM_PROMPT } from "./systemPrompt.js";
 import { inferRouteHint } from "./routeHint.js";
 import { createCalculatorTool } from "../tools/calculator.js";
+import { createCorpusCatalogTool } from "../tools/corpusCatalog.js";
 import { createKnowledgeBaseTool } from "../tools/knowledgeBase.js";
 import { createWebSearchTool } from "../tools/webSearch.js";
 import { InMemorySessionMemory } from "./sessionMemory.js";
 import { beginToolTrace, deriveRouteHintFromToolCalls, getTrackedToolCalls, withToolTrace } from "./toolTrace.js";
 import type { InMemoryKnowledgeBase } from "../rag/inMemoryKnowledgeBase.js";
 import type { AppConfig } from "../shared/config.js";
-import type { ChatResult, Logger, RouteHint, ToolCallRecord, WalkiContext } from "../shared/types.js";
+import type { ChatResult, Logger, RouteHint, SearchResult, ToolCallRecord, WalkiContext } from "../shared/types.js";
 
 interface AgentLike {
   invoke(input: { messages: Array<{ role: string; content: string }> }): Promise<unknown>;
@@ -34,6 +35,9 @@ interface AgentRunnerOptions {
   sessionMemory?: InMemorySessionMemory;
   createAgent?: (config: AppConfig, knowledgeBase: InMemoryKnowledgeBase | null) => Promise<AgentLike>;
 }
+
+const LIVE_WEB_SEARCH_UNAVAILABLE_MESSAGE =
+  "Live web search is unavailable right now, so I can't verify a current answer. If you'd like, I can still summarize what our local docs say or help with a non-current walking question.";
 
 function extractText(value: unknown): string {
   if (typeof value === "string") {
@@ -120,6 +124,7 @@ async function createLangChainAgent(
     createCalculatorTool(),
     createWebSearchTool(config.tavilyApiKey),
     createKnowledgeBaseTool(knowledgeBase),
+    createCorpusCatalogTool(knowledgeBase),
   ];
 
   return createAgent({
@@ -202,6 +207,125 @@ function sanitizeToolCallsForLogging(toolCalls: ToolCallRecord[]) {
   }));
 }
 
+function parseJsonObject<T>(value: unknown): T | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+function parseKnowledgeBaseSourcesFromToolCalls(toolCalls: ToolCallRecord[]) {
+  const sourceNames = new Set<string>();
+
+  toolCalls
+    .filter((toolCall) => toolCall.toolName === "knowledge_base")
+    .forEach((toolCall) => {
+      const parsed = parseJsonObject<{ results?: Array<{ sourceName?: unknown }> }>(toolCall.output);
+      if (!Array.isArray(parsed?.results)) {
+        return;
+      }
+
+      for (const result of parsed.results) {
+        if (typeof result?.sourceName === "string" && result.sourceName.trim()) {
+          sourceNames.add(result.sourceName.trim());
+        }
+      }
+    });
+
+  return [...sourceNames];
+}
+
+function parseWebSourcesFromToolCalls(toolCalls: ToolCallRecord[]) {
+  const labels: string[] = [];
+
+  toolCalls
+    .filter((toolCall) => toolCall.toolName === "web_search")
+    .forEach((toolCall) => {
+      const parsed = parseJsonObject<{ results?: SearchResult[] }>(toolCall.output);
+      if (!Array.isArray(parsed?.results)) {
+        return;
+      }
+
+      parsed.results.forEach((result) => {
+        if (typeof result?.title === "string" && result.title.trim()) {
+          labels.push(result.title.trim());
+          return;
+        }
+
+        if (typeof result?.url === "string" && result.url.trim()) {
+          try {
+            labels.push(new URL(result.url).hostname.replace(/^www\./, ""));
+          } catch {
+            labels.push(result.url.trim());
+          }
+        }
+      });
+    });
+
+  return [...new Set(labels)].slice(0, 5);
+}
+
+function appendSourcesLine(answer: string, sourceLabels: string[]) {
+  if (sourceLabels.length === 0) {
+    return answer;
+  }
+
+  const trimmed = answer.trim();
+  if (/^sources:/im.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `${trimmed}\n\nSources: ${sourceLabels.join(", ")}`;
+}
+
+function didCurrentInfoWebSearchFail(
+  estimatedRouteHint: RouteHint,
+  toolCalls: ToolCallRecord[],
+) {
+  if (estimatedRouteHint !== "web_search") {
+    return false;
+  }
+
+  const webSearchCalls = toolCalls.filter((toolCall) => toolCall.toolName === "web_search");
+  if (webSearchCalls.length === 0) {
+    return false;
+  }
+
+  const successfulWebSearch = webSearchCalls.some((toolCall) => {
+    if (toolCall.error) {
+      return false;
+    }
+
+    const parsed = parseJsonObject<{ results?: SearchResult[] }>(toolCall.output);
+    return Array.isArray(parsed?.results) && parsed.results.length > 0;
+  });
+
+  return !successfulWebSearch;
+}
+
+function finalizeAnswer(answer: string, estimatedRouteHint: RouteHint, toolCalls: ToolCallRecord[]) {
+  if (didCurrentInfoWebSearchFail(estimatedRouteHint, toolCalls)) {
+    return LIVE_WEB_SEARCH_UNAVAILABLE_MESSAGE;
+  }
+
+  const knowledgeBaseSources = parseKnowledgeBaseSourcesFromToolCalls(toolCalls);
+  if (knowledgeBaseSources.length > 0) {
+    return appendSourcesLine(answer, knowledgeBaseSources);
+  }
+
+  const webSources = parseWebSourcesFromToolCalls(toolCalls);
+  if (webSources.length > 0) {
+    return appendSourcesLine(answer, webSources);
+  }
+
+  return answer.trim();
+}
+
 export function createCourseAgentRunner(
   config: AppConfig,
   logger: Logger,
@@ -232,7 +356,8 @@ export function createCourseAgentRunner(
         }),
       );
       const routeHint = deriveRouteHintFromToolCalls(toolCalls);
-      const answer = extractText(output);
+      const rawAnswer = extractText(output);
+      const answer = finalizeAnswer(rawAnswer, estimatedRouteHint, toolCalls);
       sessionMemory.append(sessionId, [
         { role: "user", content: userMessage },
         { role: "assistant", content: answer },
@@ -264,18 +389,18 @@ export function createCourseAgentRunner(
       const stream = await agent.stream({
         messages: [...history, { role: "user", content: userMessage }],
       }, { streamMode: "messages" });
-      let answer = "";
+      let streamedAnswer = "";
 
       for await (const chunk of stream) {
         const text = extractAssistantStreamText(chunk);
         if (text) {
-          answer += text;
-          yield { type: "chunk", text };
+          streamedAnswer += text;
         }
       }
 
       const toolCalls = getTrackedToolCalls(traceContext);
       const routeHint = deriveRouteHintFromToolCalls(toolCalls);
+      const answer = finalizeAnswer(streamedAnswer, estimatedRouteHint, toolCalls);
       sessionMemory.append(sessionId, [
         { role: "user", content: userMessage },
         { role: "assistant", content: answer },
@@ -290,6 +415,9 @@ export function createCourseAgentRunner(
         toolCalls: sanitizeToolCallsForLogging(toolCalls),
         retrievedSources: summarizeRetrievedSources(toolCalls),
       });
+      if (answer) {
+        yield { type: "chunk", text: answer };
+      }
       yield { type: "meta", routeHint, toolCalls };
     },
   };

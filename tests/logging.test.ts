@@ -1,8 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { createCourseAgentRunner } from "../src/agent/createCourseAgent.js";
 import { createCalculatorTool } from "../src/tools/calculator.js";
 import { createKnowledgeBaseTool } from "../src/tools/knowledgeBase.js";
+import { createInMemoryKnowledgeBase } from "../src/rag/inMemoryKnowledgeBase.js";
+import { createWebSearchTool } from "../src/tools/webSearch.js";
 import type { AppConfig } from "../src/shared/config.js";
 import type { Logger } from "../src/shared/types.js";
 
@@ -27,6 +30,19 @@ function createLoggerSpy() {
   };
 
   return { logger, entries };
+}
+
+class KeywordEmbeddings implements EmbeddingsInterface<number[]> {
+  async embedDocuments(documents: string[]) {
+    return Promise.all(documents.map(async (document) => this.embedQuery(document)));
+  }
+
+  async embedQuery(document: string) {
+    const normalized = document.toLowerCase();
+    return ["walking", "healthy", "aging", "current", "guidance"].map((keyword) =>
+      normalized.includes(keyword) ? 1 : 0,
+    );
+  }
 }
 
 test("chat.request_completed logs tool arguments and summarized results", async () => {
@@ -133,4 +149,135 @@ test("streaming only emits assistant text and ignores tool payload message chunk
   }
 
   assert.deepEqual(chunks, ["Clean answer"]);
+});
+
+test("current-info requests return an unavailable message when live web search fails", async () => {
+  const { logger } = createLoggerSpy();
+  const runner = createCourseAgentRunner(mockConfig, logger, null, {
+    async createAgent() {
+      const webSearchTool = createWebSearchTool(undefined);
+      return {
+        async invoke() {
+          await webSearchTool.invoke({ query: "current walking guidance" }).catch(() => undefined);
+          return "Here is the current guidance.";
+        },
+        async stream() {
+          throw new Error("not used");
+        },
+      };
+    },
+  });
+
+  const result = await runner.run("What are the current recommendations for walking?");
+
+  assert.match(result.answer, /Live web search is unavailable/i);
+});
+
+test("streamed current-info requests also return an unavailable message when live web search fails", async () => {
+  const { logger } = createLoggerSpy();
+  const runner = createCourseAgentRunner(mockConfig, logger, null, {
+    async createAgent() {
+      const webSearchTool = createWebSearchTool(undefined);
+      return {
+        async invoke() {
+          throw new Error("not used");
+        },
+        async stream() {
+          await webSearchTool.invoke({ query: "current walking guidance" }).catch(() => undefined);
+          return (async function* () {
+            yield [{ type: "ai", content: "Maybe this is current guidance." }, { langgraph_node: "model" }];
+          })();
+        },
+      };
+    },
+  });
+
+  const chunks: string[] = [];
+  for await (const update of runner.stream("What are the current recommendations for walking?")) {
+    if (update.type === "chunk") {
+      chunks.push(update.text);
+    }
+  }
+
+  assert.deepEqual(chunks, [
+    "Live web search is unavailable right now, so I can't verify a current answer. If you'd like, I can still summarize what our local docs say or help with a non-current walking question.",
+  ]);
+});
+
+test("knowledge-base answers append a deterministic Sources line", async () => {
+  const { logger } = createLoggerSpy();
+  const knowledgeBase = await createInMemoryKnowledgeBase(
+    [
+      {
+        id: "evidence::healthy-aging.txt::chunk-1",
+        pageContent: "Walking supports healthy aging.",
+        metadata: {
+          sourcePath: "evidence/healthy-aging.txt",
+          sourceName: "healthy-aging.txt",
+          category: "evidence",
+        },
+      },
+    ],
+    new KeywordEmbeddings(),
+  );
+  const runner = createCourseAgentRunner(mockConfig, logger, null, {
+    async createAgent() {
+      const knowledgeBaseTool = createKnowledgeBaseTool(knowledgeBase);
+      return {
+        async invoke() {
+          await knowledgeBaseTool.invoke({ query: "healthy aging" });
+          return "Walking supports healthy aging in older adults.";
+        },
+        async stream() {
+          throw new Error("not used");
+        },
+      };
+    },
+  });
+
+  const result = await runner.run("What do our docs say about healthy aging?");
+
+  assert.match(result.answer, /Sources: healthy-aging\.txt/);
+});
+
+test("web-search answers append a deterministic Sources line from search results", async () => {
+  const { logger } = createLoggerSpy();
+  const runner = createCourseAgentRunner(
+    {
+      ...mockConfig,
+      tavilyApiKey: "test-tavily-key",
+    },
+    logger,
+    null,
+    {
+      async createAgent() {
+        const webSearchTool = createWebSearchTool("test-tavily-key", {
+          async invoke() {
+            return {
+              results: [
+                {
+                  title: "CDC walking guidance",
+                  url: "https://www.cdc.gov/walking-guidance",
+                  content: "Current walking guidance",
+                },
+              ],
+            };
+          },
+        });
+        return {
+          async invoke() {
+            await webSearchTool.invoke({ query: "current walking guidance" });
+            return "Adults should get regular moderate activity.";
+          },
+          async stream() {
+            throw new Error("not used");
+          },
+        };
+      },
+    },
+  );
+
+  const result = await runner.run("What are the current recommendations for walking?");
+
+  assert.match(result.answer, /Sources: CDC walking guidance/);
 });

@@ -6,6 +6,8 @@ const searchRegex =
   /\b(search|look up|find|latest|news|today|current|who is|what happened|weather|stock|price)\b/i;
 const walkingMathRegex =
   /\b(steps?|streak|goal|mile|miles|km|kilometers?|minutes?|pace|distance|calories?)\b/i;
+const corpusRegex =
+  /\b(local docs?|knowledge base|knowledge-base|sources?|corpus|available docs?|files?)\b/i;
 
 export function inferRouteHint(message: string): RouteHint {
   const normalized = message.trim();
@@ -28,6 +30,10 @@ export function inferRouteHint(message: string): RouteHint {
 
   if (searchRegex.test(normalized)) {
     return "web_search";
+  }
+
+  if (corpusRegex.test(normalized)) {
+    return "knowledge_base";
   }
 
   return "direct";
