@@ -1,9 +1,64 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 
 const DEFAULT_DIMENSIONS = 256;
+const STOPWORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "be",
+  "but",
+  "by",
+  "do",
+  "does",
+  "for",
+  "from",
+  "good",
+  "how",
+  "i",
+  "if",
+  "in",
+  "is",
+  "it",
+  "local",
+  "my",
+  "of",
+  "on",
+  "or",
+  "our",
+  "say",
+  "should",
+  "that",
+  "the",
+  "their",
+  "to",
+  "what",
+  "with",
+  "you",
+  "your",
+  "docs",
+]);
+
+function normalizeToken(token: string) {
+  let normalized = token.toLowerCase();
+
+  if (normalized.length > 5 && normalized.endsWith("ing")) {
+    normalized = normalized.slice(0, -3);
+  } else if (normalized.length > 4 && normalized.endsWith("ed")) {
+    normalized = normalized.slice(0, -2);
+  } else if (normalized.length > 3 && normalized.endsWith("s")) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  return normalized;
+}
 
 function tokenize(text: string) {
-  return text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  return (text.toLowerCase().match(/[a-z0-9]+/g) ?? [])
+    .map((token) => normalizeToken(token))
+    .filter((token) => token.length > 1 && !STOPWORDS.has(token));
 }
 
 function hashToken(token: string, dimensions: number) {

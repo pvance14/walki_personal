@@ -38,7 +38,68 @@ function splitIntoParagraphs(content: string) {
     .filter(Boolean);
 }
 
-function createChunks(content: string) {
+function normalizeHeading(line: string) {
+  return line.trim().replace(/\s+/g, " ");
+}
+
+function isSectionHeading(line: string) {
+  const trimmed = normalizeHeading(line);
+  if (!trimmed) {
+    return false;
+  }
+
+  if (/^#{1,6}\s+.+/.test(trimmed)) {
+    return true;
+  }
+
+  return (
+    trimmed.length <= 80 &&
+    /[A-Z]/.test(trimmed) &&
+    trimmed === trimmed.toUpperCase() &&
+    /^[A-Z0-9\s:'"(),.&/-]+$/.test(trimmed)
+  );
+}
+
+function splitIntoSections(content: string) {
+  const lines = content.split(/\r?\n/);
+  const sections: Array<{ heading?: string; content: string }> = [];
+  let currentHeading: string | undefined;
+  let currentLines: string[] = [];
+
+  const pushSection = () => {
+    const sectionContent = currentLines.join("\n").trim();
+    if (!sectionContent) {
+      currentLines = [];
+      return;
+    }
+
+    sections.push({
+      heading: currentHeading,
+      content: sectionContent,
+    });
+    currentLines = [];
+  };
+
+  for (const line of lines) {
+    if (isSectionHeading(line)) {
+      pushSection();
+      currentHeading = normalizeHeading(line).replace(/^#{1,6}\s+/, "");
+      continue;
+    }
+
+    currentLines.push(line);
+  }
+
+  pushSection();
+
+  if (sections.length === 0) {
+    return [{ content: content.trim() }];
+  }
+
+  return sections;
+}
+
+function chunkSectionContent(content: string) {
   const normalized = content.trim();
   if (!normalized) {
     return [];
@@ -101,6 +162,24 @@ function createChunks(content: string) {
 
   if (currentChunk.trim()) {
     chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+function createChunks(content: string) {
+  const normalized = content.trim();
+  if (!normalized) {
+    return [];
+  }
+
+  const chunks: string[] = [];
+  for (const section of splitIntoSections(normalized)) {
+    const sectionChunks = chunkSectionContent(section.content);
+    for (const sectionChunk of sectionChunks) {
+      const prefixedChunk = section.heading ? `${section.heading}\n\n${sectionChunk}` : sectionChunk;
+      chunks.push(prefixedChunk);
+    }
   }
 
   return chunks;

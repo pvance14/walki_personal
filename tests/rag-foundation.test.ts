@@ -58,6 +58,20 @@ test("loadKnowledgeDocuments chunks long files into multiple retrievable documen
   assert.match(documents[0]?.id ?? "", /walking-form\.txt::chunk-1$/);
 });
 
+test("loadKnowledgeDocuments preserves section headings inside chunk text", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "walki-rag-headings-"));
+  await mkdir(path.join(tempDir, "evidence"), { recursive: true });
+
+  await writeFile(
+    path.join(tempDir, "evidence", "walking-form.txt"),
+    ["INTRODUCTION", "Walking is good.", "", "HOW TO WALK", "Keep your arms swinging naturally and your toes straight ahead."].join("\n"),
+  );
+
+  const documents = await loadKnowledgeDocuments(tempDir);
+
+  assert.ok(documents.some((document) => document.pageContent.startsWith("HOW TO WALK")));
+});
+
 test("getSupportedKnowledgeFileExtensions returns the allowed corpus formats", () => {
   assert.deepEqual(getSupportedKnowledgeFileExtensions(), [".md", ".txt"]);
 });
