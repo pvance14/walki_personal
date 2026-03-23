@@ -6,6 +6,7 @@ import path from "node:path";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { createInMemoryKnowledgeBase } from "../src/rag/inMemoryKnowledgeBase.js";
 import { getSupportedKnowledgeFileExtensions, loadKnowledgeDocuments } from "../src/rag/loadDocuments.js";
+import { LocalEmbeddings } from "../src/rag/localEmbeddings.js";
 
 class KeywordEmbeddings implements EmbeddingsInterface<number[]> {
   private readonly keywords = ["walki", "streak", "persona", "safety", "dashboard", "motivation", "heel", "toe", "form", "posture"];
@@ -131,4 +132,30 @@ test("chunked documents make focused sections retrievable from long source files
 
   assert.ok(matches.some((match) => match.metadata.sourceName === "walking-form.txt"));
   assert.ok(matches.some((match) => /heel and toe walk/i.test(match.pageContent)));
+});
+
+test("hybrid retrieval boosts walking-form chunks for broad good-form questions", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "walki-rag-hybrid-"));
+  await mkdir(path.join(tempDir, "evidence"), { recursive: true });
+
+  await writeFile(
+    path.join(tempDir, "evidence", "walking-benefits.txt"),
+    "Walking improves cardiovascular health and healthy aging.".repeat(80),
+  );
+  await writeFile(
+    path.join(tempDir, "evidence", "walking-form.txt"),
+    [
+      "HOW TO WALK",
+      "Maintain an erect posture, let your arms swing naturally, keep your toes straight ahead, and use a fair heel and toe walk with a long free stride.",
+    ]
+      .join("\n")
+      .repeat(20),
+  );
+
+  const documents = await loadKnowledgeDocuments(tempDir);
+  const knowledgeBase = await createInMemoryKnowledgeBase(documents, new LocalEmbeddings());
+  const matches = await knowledgeBase.search("How should I walk with good form?", 3, 0);
+
+  assert.equal(matches[0]?.metadata.sourceName, "walking-form.txt");
+  assert.match(matches[0]?.pageContent ?? "", /heel and toe|posture|arms swing/i);
 });

@@ -23,7 +23,11 @@ export function resetSessionMemory(sessionId?: string) {
   return sessionMemory.clear(sessionId);
 }
 
-export function getCorpusMetadata() {
+export async function getCorpusMetadata() {
+  if (!cachedCorpusMetadata) {
+    await getCourseAgentRunner();
+  }
+
   return cachedCorpusMetadata;
 }
 

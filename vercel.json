@@ -4,6 +4,10 @@
     "api/chat.ts": {
       "maxDuration": 60,
       "includeFiles": "docs/**"
+    },
+    "api/debug/corpus.ts": {
+      "maxDuration": 60,
+      "includeFiles": "docs/**"
     }
   }
 }

@@ -10,7 +10,7 @@ interface AppDependencies {
   runner: AgentRunner;
   publicDir: string;
   resetSession: (sessionId?: string) => boolean;
-  getCorpusMetadata?: () => CorpusMetadata | null;
+  getCorpusMetadata?: () => CorpusMetadata | Promise<CorpusMetadata | null> | null;
 }
 
 export interface StreamEvent {
@@ -103,8 +103,8 @@ async function handleChatResetRequest(
   }
 }
 
-export function getCorpusMetadataPayload(dependencies: Pick<AppDependencies, "getCorpusMetadata">) {
-  return dependencies.getCorpusMetadata?.() ?? {
+export async function getCorpusMetadataPayload(dependencies: Pick<AppDependencies, "getCorpusMetadata">) {
+  return (await dependencies.getCorpusMetadata?.()) ?? {
     chunkCount: 0,
     sourceCount: 0,
     categories: [],
@@ -261,7 +261,7 @@ export function createApp(dependencies: AppDependencies) {
     }
 
     if (request.method === "GET" && request.url === "/api/debug/corpus") {
-      sendJson(response, 200, getCorpusMetadataPayload(dependencies));
+      sendJson(response, 200, await getCorpusMetadataPayload(dependencies));
       return;
     }
 

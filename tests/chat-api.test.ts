@@ -166,8 +166,8 @@ test("resetChatSession rejects a missing session id", () => {
   );
 });
 
-test("getCorpusMetadataPayload returns debug corpus metadata", () => {
-  const payload = getCorpusMetadataPayload({
+test("getCorpusMetadataPayload returns debug corpus metadata", async () => {
+  const payload = await getCorpusMetadataPayload({
     getCorpusMetadata() {
       return {
         chunkCount: 17,

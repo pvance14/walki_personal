@@ -41,7 +41,7 @@ const STOPWORDS = new Set([
   "docs",
 ]);
 
-function normalizeToken(token: string) {
+export function normalizeToken(token: string) {
   let normalized = token.toLowerCase();
 
   if (normalized.length > 5 && normalized.endsWith("ing")) {
@@ -55,7 +55,7 @@ function normalizeToken(token: string) {
   return normalized;
 }
 
-function tokenize(text: string) {
+export function tokenizeText(text: string) {
   return (text.toLowerCase().match(/[a-z0-9]+/g) ?? [])
     .map((token) => normalizeToken(token))
     .filter((token) => token.length > 1 && !STOPWORDS.has(token));
@@ -90,7 +90,7 @@ export class LocalEmbeddings implements EmbeddingsInterface<number[]> {
   async embedQuery(text: string) {
     const vector = new Array<number>(this.dimensions).fill(0);
 
-    tokenize(text).forEach((token) => {
+    tokenizeText(text).forEach((token) => {
       const index = hashToken(token, this.dimensions);
       vector[index] = (vector[index] ?? 0) + 1;
     });
