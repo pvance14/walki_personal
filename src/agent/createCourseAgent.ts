@@ -9,7 +9,7 @@ import { createCorpusCatalogTool } from "../tools/corpusCatalog.js";
 import { createKnowledgeBaseTool } from "../tools/knowledgeBase.js";
 import { createWebSearchTool } from "../tools/webSearch.js";
 import { InMemorySessionMemory } from "./sessionMemory.js";
-import { beginToolTrace, deriveRouteHintFromToolCalls, getTrackedToolCalls, withToolTrace } from "./toolTrace.js";
+import { beginToolTrace, deriveRouteHintFromToolCalls, getTrackedToolCalls, summarizeToolOutput, withToolTrace } from "./toolTrace.js";
 import type { InMemoryKnowledgeBase } from "../rag/inMemoryKnowledgeBase.js";
 import type { AppConfig } from "../shared/config.js";
 import type { ChatResult, Logger, RouteHint, SearchResult, ToolCallRecord, WalkiContext } from "../shared/types.js";
@@ -202,7 +202,7 @@ function sanitizeToolCallsForLogging(toolCalls: ToolCallRecord[]) {
   return toolCalls.map((toolCall) => ({
     toolName: toolCall.toolName,
     input: toolCall.input,
-    output: toolCall.output,
+    output: summarizeToolOutput(toolCall.output),
     error: toolCall.error,
   }));
 }

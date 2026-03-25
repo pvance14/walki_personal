@@ -7,7 +7,7 @@ interface ToolTraceContext {
 
 const toolTraceStorage = new AsyncLocalStorage<ToolTraceContext>();
 
-function summarizeOutput(output: unknown) {
+export function summarizeToolOutput(output: unknown) {
   if (typeof output !== "string") {
     return output;
   }
@@ -46,7 +46,7 @@ export async function traceToolExecution<TInput extends Record<string, unknown>,
     context?.toolCalls.push({
       toolName,
       input,
-      output: summarizeOutput(output),
+      output,
     });
     return output;
   } catch (error) {

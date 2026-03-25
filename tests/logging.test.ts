@@ -281,3 +281,44 @@ test("web-search answers append a deterministic Sources line from search results
 
   assert.match(result.answer, /Sources: CDC walking guidance/);
 });
+
+test("current-info requests do not fall back when web search output is long but valid", async () => {
+  const { logger } = createLoggerSpy();
+  const runner = createCourseAgentRunner(
+    {
+      ...mockConfig,
+      tavilyApiKey: "test-tavily-key",
+    },
+    logger,
+    null,
+    {
+      async createAgent() {
+        const webSearchTool = createWebSearchTool("test-tavily-key", {
+          async invoke() {
+            return {
+              results: Array.from({ length: 5 }, (_, index) => ({
+                title: `Walking guidance source ${index + 1}`,
+                url: `https://example.com/guidance/${index + 1}`,
+                content: "Current walking guidance ".repeat(40),
+              })),
+            };
+          },
+        });
+        return {
+          async invoke() {
+            await webSearchTool.invoke({ query: "current walking guidance" });
+            return "Adults should aim for regular moderate-intensity physical activity.";
+          },
+          async stream() {
+            throw new Error("not used");
+          },
+        };
+      },
+    },
+  );
+
+  const result = await runner.run("What are the current recommendations for walking?");
+
+  assert.doesNotMatch(result.answer, /Live web search is unavailable/i);
+  assert.match(result.answer, /Sources: Walking guidance source 1/);
+});
