@@ -1,9 +1,9 @@
 # Local AI workspace (not shared)
-ai/
+# ai/
 
 # Local tool/editor files
-claude.md
-.cursorrules
+# claude.md
+#.cursorrules
 
 # Dependencies / model artifacts
 node_models/
