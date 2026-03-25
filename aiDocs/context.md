@@ -85,9 +85,6 @@ Priority order:
   - useful descriptions
   - Zod schemas
 
-## Legacy Repo Note
-
-This repo previously contained a Walki static MVP demo. That legacy work is now partially reactivated as the UI and product framing for the graded Phase 1 deliverable. The course requirements still govern scope and grading.
 
 ## Working Rules
 
